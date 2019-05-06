@@ -1,15 +1,21 @@
 <template>
   <div class="login-container">
-    <el-form ref="loginForm" :model="loginForm" :rules="loginRules" class="login-form" auto-complete="on" label-position="left">
-
+    <el-form
+      ref="loginForm"
+      :model="loginForm"
+      :rules="loginRules"
+      class="login-form"
+      auto-complete="on"
+      label-position="left"
+    >
       <div class="title-container">
         <h3 class="title">
-          江苏银行员工系统
+          <!-- 江苏银行员工系统 -->
         </h3>
         <lang-select class="set-language" />
       </div>
 
-      <el-form-item prop="username">
+      <el-form-item prop="`1`">
         <span class="svg-container">
           <svg-icon icon-class="user" />
         </span>
@@ -42,9 +48,12 @@
         </span>
       </el-form-item>
 
-      <el-button :loading="loading" type="primary" style="width:100%;margin-bottom:30px;" @click.native.prevent="handleLogin">
-        {{ $t('login.logIn') }}
-      </el-button>
+      <el-button
+        :loading="loading"
+        type="primary"
+        style="width:100%;margin-bottom:30px;"
+        @click.native.prevent="handleLogin"
+      >{{ $t('login.logIn') }}</el-button>
 
       <div style="position:relative">
         <div class="tips">
@@ -52,15 +61,13 @@
           <span>{{ $t('login.password') }} : {{ $t('login.any') }}</span>
         </div>
         <div class="tips">
-          <span style="margin-right:18px;">
-            {{ $t('login.username') }} : editor
-          </span>
+          <span style="margin-right:18px;">{{ $t('login.username') }} : editor</span>
           <span>{{ $t('login.password') }} : {{ $t('login.any') }}</span>
         </div>
 
         <!-- <el-button class="thirdparty-button" type="primary" @click="showDialog=true">
           {{ $t('login.thirdparty') }}
-        </el-button> -->
+        </el-button>-->
       </div>
     </el-form>
 
@@ -78,6 +85,7 @@
 import { validUsername } from '@/utils/validate'
 import LangSelect from '@/components/LangSelect'
 import SocialSign from './socialSignin'
+import * as publicApi from '../../api/public'
 
 export default {
   name: 'Login',
@@ -103,8 +111,12 @@ export default {
         password: '111111'
       },
       loginRules: {
-        username: [{ required: true, trigger: 'blur', validator: validateUsername }],
-        password: [{ required: true, trigger: 'blur', validator: validatePassword }]
+        username: [
+          { required: true, trigger: 'blur', validator: validateUsername }
+        ],
+        password: [
+          { required: true, trigger: 'blur', validator: validatePassword }
+        ]
       },
       passwordType: 'password',
       loading: false,
@@ -144,43 +156,52 @@ export default {
         this.$refs.password.focus()
       })
     },
-    handleLogin() {
-      console.log(this.$router)
-      this.$refs.loginForm.validate(valid => {
-        if (valid) {
-          this.loading = true
-          this.$store.dispatch('user/login', this.loginForm)
-            .then(() => {
-              this.$router.push({ path: 'index' || '/' })
-              this.loading = false
-            })
-            .catch(() => {
-              this.loading = false
-            })
-        } else {
-          console.log('error submit!!')
-          return false
-        }
+
+    // 获取code
+    getCode() {
+      const data = {
+        action: 'md_info',
+        name: 'system'
+      }
+      publicApi.publicApi('/ajax/Com_PCInfo.ashx', data).then(res => {
+        console.log(res, '-=-=')
       })
+    },
+    handleLogin() {
+      this.getCode().then(res => {
+        console.log(res)
+      })
+        .catch(err => {
+          alert(err)
+        })
+      // let data = {
+      //   action: "get_user_info",
+      //   name: this.name,
+      //   pwd: this.pwd,
+      //   code: this.code
+      // };
+      // publicApi.publicApi("/ajax/Com_PCInfo.ashx", data).then(res => {
+      //   console.log(res, "-=-=");
+      // });
+      // console.log(this.$router)
+      // this.$refs.loginForm.validate(valid => {
+      //   console.log(valid,"0000")
+      //   // if (valid) {
+      //   //   this.loading = true
+      //   //   this.$store.dispatch('user/login', this.loginForm)
+      //   //     .then(() => {
+      //   //       this.$router.push({ path: 'index' || '/' })
+      //   //       this.loading = false
+      //   //     })
+      //   //     .catch(() => {
+      //   //       this.loading = false
+      //   //     })
+      //   // } else {
+      //   //   console.log('error submit!!')
+      //   //   return false
+      //   // }
+      // })
     }
-    // afterQRScan() {
-    //   if (e.key === 'x-admin-oauth-code') {
-    //     const code = getQueryObject(e.newValue)
-    //     const codeMap = {
-    //       wechat: 'code',
-    //       tencent: 'code'
-    //     }
-    //     const type = codeMap[this.auth_type]
-    //     const codeName = code[type]
-    //     if (codeName) {
-    //       this.$store.dispatch('LoginByThirdparty', codeName).then(() => {
-    //         this.$router.push({ path: this.redirect || '/' })
-    //       })
-    //     } else {
-    //       alert('第三方登录失败')
-    //     }
-    //   }
-    // }
   }
 }
 </script>
@@ -189,8 +210,8 @@ export default {
 /* 修复input 背景不协调 和光标变色 */
 /* Detail see https://github.com/PanJiaChen/vue-element-admin/pull/927 */
 
-$bg:#283443;
-$light_gray:#fff;
+$bg: #283443;
+$light_gray: #fff;
 $cursor: #fff;
 
 @supports (-webkit-mask: none) and (not (cater-color: $cursor)) {
@@ -233,9 +254,9 @@ $cursor: #fff;
 </style>
 
 <style lang="scss" scoped>
-$bg:#2d3a4b;
-$dark_gray:#889aa4;
-$light_gray:#eee;
+$bg: #2d3a4b;
+$dark_gray: #889aa4;
+$light_gray: #eee;
 
 .login-container {
   min-height: 100%;
