@@ -168,21 +168,21 @@ export default {
       })
     },
     handleLogin() {
-      this.getCode().then(res => {
-        console.log(res)
+      // this.getCode().then(res => {
+      //   console.log(res)
+      // })
+      //   .catch(err => {
+      //     alert(err)
+      //   })
+      const data = {
+        action: 'get_user_info',
+        name: 'system',
+        pwd: 'system',
+        code: 'system'
+      }
+      publicApi.publicApi('/ajax/Com_PCInfo.ashx', data).then(res => {
+        console.log(res, '-=-=')
       })
-        .catch(err => {
-          alert(err)
-        })
-      // let data = {
-      //   action: "get_user_info",
-      //   name: this.name,
-      //   pwd: this.pwd,
-      //   code: this.code
-      // };
-      // publicApi.publicApi("/ajax/Com_PCInfo.ashx", data).then(res => {
-      //   console.log(res, "-=-=");
-      // });
       // console.log(this.$router)
       // this.$refs.loginForm.validate(valid => {
       //   console.log(valid,"0000")
