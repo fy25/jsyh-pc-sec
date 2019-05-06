@@ -1,10 +1,9 @@
-import request from '@/utils/request'
+import { Base } from "../utils/base"
 
-export function publicApi(url, data) {
-  return request({
-    url: url,
-    method: 'post',
-    data
-  })
+// 获取验证码
+function publicApi(url, params) {
+    return Base.post(url, params)
 }
 
+
+export { publicApi }

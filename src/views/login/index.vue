@@ -3,25 +3,22 @@
     <el-form
       ref="loginForm"
       :model="loginForm"
-      :rules="loginRules"
       class="login-form"
       auto-complete="on"
       label-position="left"
     >
       <div class="title-container">
-        <h3 class="title">
-          <!-- 江苏银行员工系统 -->
-        </h3>
-        <lang-select class="set-language" />
+        <h3 class="title">江苏银行员工系统</h3>
+        <lang-select class="set-language"/>
       </div>
 
       <el-form-item prop="`1`">
         <span class="svg-container">
-          <svg-icon icon-class="user" />
+          <svg-icon icon-class="user"/>
         </span>
         <el-input
           ref="username"
-          v-model="loginForm.username"
+          v-model="loginForm.name"
           :placeholder="$t('login.username')"
           name="username"
           type="text"
@@ -31,12 +28,12 @@
 
       <el-form-item prop="password">
         <span class="svg-container">
-          <svg-icon icon-class="password" />
+          <svg-icon icon-class="password"/>
         </span>
         <el-input
           :key="passwordType"
           ref="password"
-          v-model="loginForm.password"
+          v-model="loginForm.pwd"
           :type="passwordType"
           :placeholder="$t('login.password')"
           name="password"
@@ -44,7 +41,7 @@
           @keyup.enter.native="handleLogin"
         />
         <span class="show-pwd" @click="showPwd">
-          <svg-icon :icon-class="passwordType === 'password' ? 'eye' : 'eye-open'" />
+          <svg-icon :icon-class="passwordType === 'password' ? 'eye' : 'eye-open'"/>
         </span>
       </el-form-item>
 
@@ -76,70 +73,40 @@
       <br>
       <br>
       <br>
-      <social-sign />
+      <social-sign/>
     </el-dialog>
   </div>
 </template>
 
 <script>
-import { validUsername } from '@/utils/validate'
-import LangSelect from '@/components/LangSelect'
-import SocialSign from './socialSignin'
-import * as publicApi from '../../api/public'
+// import { validUsername } from "@/utils/validate";
+import LangSelect from "@/components/LangSelect";
+import SocialSign from "./socialSignin";
+import * as publicApi from "../../api/public";
 
 export default {
-  name: 'Login',
+  name: "Login",
   components: { LangSelect, SocialSign },
   data() {
-    const validateUsername = (rule, value, callback) => {
-      if (!validUsername(value)) {
-        callback(new Error('Please enter the correct user name'))
-      } else {
-        callback()
-      }
-    }
-    const validatePassword = (rule, value, callback) => {
-      if (value.length < 6) {
-        callback(new Error('The password can not be less than 6 digits'))
-      } else {
-        callback()
-      }
-    }
     return {
       loginForm: {
-        username: 'admin',
-        password: '111111'
+        name: "",
+        pwd: ""
       },
-      loginRules: {
-        username: [
-          { required: true, trigger: 'blur', validator: validateUsername }
-        ],
-        password: [
-          { required: true, trigger: 'blur', validator: validatePassword }
-        ]
-      },
-      passwordType: 'password',
+      passwordType: "password",
       loading: false,
       showDialog: false,
       redirect: undefined
-    }
-  },
-  watch: {
-    $route: {
-      handler: function(route) {
-        this.redirect = route.query && route.query.redirect
-      },
-      immediate: true
-    }
+    };
   },
   created() {
     // window.addEventListener('storage', this.afterQRScan)
   },
   mounted() {
-    if (this.loginForm.username === '') {
-      this.$refs.username.focus()
-    } else if (this.loginForm.password === '') {
-      this.$refs.password.focus()
+    if (this.loginForm.username === "") {
+      this.$refs.username.focus();
+    } else if (this.loginForm.password === "") {
+      this.$refs.password.focus();
     }
   },
   destroyed() {
@@ -147,42 +114,75 @@ export default {
   },
   methods: {
     showPwd() {
-      if (this.passwordType === 'password') {
-        this.passwordType = ''
+      if (this.passwordType === "password") {
+        this.passwordType = "";
       } else {
-        this.passwordType = 'password'
+        this.passwordType = "password";
       }
       this.$nextTick(() => {
-        this.$refs.password.focus()
-      })
+        this.$refs.password.focus();
+      });
     },
 
     // 获取code
     getCode() {
       const data = {
-        action: 'md_info',
-        name: 'system'
-      }
-      publicApi.publicApi('/ajax/Com_PCInfo.ashx', data).then(res => {
-        console.log(res, '-=-=')
-      })
+        action: "md_info",
+        name: "system"
+      };
+      return publicApi.publicApi("/ajax/Com_PCInfo.ashx", data);
     },
+
+    // 登录
+    signIn(name, pwd, code) {
+      let data = {
+        action: "get_user_info",
+        name: name,
+        pwd: pwd,
+        code: code
+      };
+      return publicApi.publicApi("/ajax/Com_PCInfo.ashx", data);
+    },
+
     handleLogin() {
-      // this.getCode().then(res => {
-      //   console.log(res)
-      // })
-      //   .catch(err => {
-      //     alert(err)
-      //   })
-      const data = {
-        action: 'get_user_info',
-        name: 'system',
-        pwd: 'system',
-        code: 'system'
+      let { name, pwd } = this.loginForm;
+      if (name == "") {
+        this.$message({
+          message: "请填写用户名",
+          type: "warning"
+        });
+      } else if (pwd == "") {
+        this.$message({
+          message: "请填写密码",
+          type: "warning"
+        });
+      } else {
+        this.getCode()
+          .then(res => {
+            if (res.code == "success") {
+              this.signIn(name, pwd, res.data).then(res => {
+                console.log(res, "login");
+                if (res.code == "success") {
+                  this.$message({
+                    message: "登录成功",
+                    type: "success"
+                  });
+                  localStorage.setItem("userinfo", JSON.stringify(res.data));
+                  console.log(this.$router)
+                  this.$router.replace({ path: "/index" });
+                }
+              });
+            }
+          })
+          .catch(err => {
+            alert(err);
+            this.$message({
+              message: err,
+              type: "warning"
+            });
+          });
       }
-      publicApi.publicApi('/ajax/Com_PCInfo.ashx', data).then(res => {
-        console.log(res, '-=-=')
-      })
+
       // console.log(this.$router)
       // this.$refs.loginForm.validate(valid => {
       //   console.log(valid,"0000")
@@ -203,7 +203,7 @@ export default {
       // })
     }
   }
-}
+};
 </script>
 
 <style lang="scss">
