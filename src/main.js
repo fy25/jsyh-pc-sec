@@ -21,12 +21,12 @@ import './utils/errorLog' // error log
 import * as filters from './filters' // global filters
 
 import { mockXHR } from '../mock' // simulation data
-import BaiduMap from 'vue-baidu-map'
+// import BaiduMap from 'vue-baidu-map'
 
-Vue.use(BaiduMap, {
-  /* Visit http://lbsyun.baidu.com/apiconsole/key for details about app key. */
-  ak: 'UkyCeyF5I8IxLZBaHTQKcgv4vulyoXiZ'
-})
+// Vue.use(BaiduMap, {
+//   /* Visit http://lbsyun.baidu.com/apiconsole/key for details about app key. */
+//   ak: 'UkyCeyF5I8IxLZBaHTQKcgv4vulyoXiZ'
+// })
 
 // mock api in github pages site build
 if (process.env.NODE_ENV === 'production') { mockXHR() }
