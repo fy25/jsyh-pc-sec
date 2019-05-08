@@ -249,7 +249,11 @@ export default {
       BUG_ID: "",
       pageIndex: 1,
       pageSize: 10,
-      is_all: 1
+      is_all: 1,
+      _key: "",
+      Province: "",
+      City: "",
+      Img: ""
     };
   },
   mounted() {
@@ -263,7 +267,7 @@ export default {
       this.userInfo = userInfo;
       this.getBranch();
       this.getPoint();
-      this.getMyLocation();
+      // this.getMyLocation();
     }
   },
   methods: {
@@ -281,7 +285,7 @@ export default {
       this.latitude = position.lat;
       this.longitude = position.lng;
       this.city = position.city;
-      this.setMap();
+      // this.setMap();
     },
     showErr() {
       console.log("定位失败");
@@ -289,10 +293,37 @@ export default {
     },
     //第二部分
     //位置信息在地图上展示
-    setMap() {
+    setMap(pointList) {
+      var center = new qq.maps.LatLng(39.916527, 116.397128);
+      var map = new qq.maps.Map(document.getElementById("container"), {
+        center: center,
+        zoom: 13
+      });
+      //创建标记
+      var marker = new qq.maps.Marker({
+        position: center,
+        map: map
+      });
+      //添加到提示窗
+      var info = new qq.maps.InfoWindow({
+        map: map
+      });
+      //获取标记的点击事件
+      qq.maps.event.addListener(marker, "click", function() {
+        info.open();
+        info.setContent(
+          '<div style="text-align:center;white-space:nowrap;' +
+            'margin:10px;">单击标记</div>'
+        );
+        info.setPosition(center);
+      });
+
       //步骤：定义map变量 调用 qq.maps.Map() 构造函数   获取地图显示容器
       //设置地图中心点
-      var myLatlng = new qq.maps.LatLng(this.latitude, this.longitude);
+      var myLatlng = new qq.maps.LatLng(
+        "34.267507700250455",
+        "117.1801899067459"
+      );
       //定义工厂模式函数
       var myOptions = {
         zoom: 13, //设置地图缩放级别
@@ -306,28 +337,55 @@ export default {
       );
       //第三部分
       //给定位的位置添加图片标注
-      console.log(this);
-      var marker = new qq.maps.Marker({
-        position: myLatlng,
-        map: map
-      });
-      //给定位的位置添加文本标注
-      var marker = new qq.maps.Label({
-        position: myLatlng,
-        map: map,
-        content: "这是我当前的位置，偏差有点大，哈哈"
-      });
 
-      qq.maps.event.addListener(map, "click", event => {
-        console.log(event);
-        const center = new qq.maps.LatLng(event.latLng.lat, event.latLng.lng);
-        this.lat = event.latLng.lat;
-        this.lng = event.latLng.lng;
-        var marker = new qq.maps.Marker({
-          position: center,
+      //给定位的位置添加文本标注
+      // var marker = new qq.maps.Label({
+      //   position: myLatlng,
+      //   map: map,
+      //   content: "这是我当前的位置，偏差有点大，哈哈"
+      // });
+
+      //添加提示窗
+
+      if (pointList) {
+        var infoWin = new qq.maps.InfoWindow({
           map: map
         });
-      });
+        for (let i = 0; i < pointList.length; i++) {
+          console.log(pointList[i].LATITUDE);
+          let marker = new qq.maps.Marker({
+            position: new qq.maps.LatLng(
+              pointList[i].LATITUDE,
+              pointList[i].LONGITUDE
+            ),
+            map: map
+          });
+          // marker.SIGN_NAME = pointList[i].SIGN_NAME;
+          qq.maps.event.addListener(marker, "click", function() {
+            console.log("123987");
+            infoWin.open();
+            infoWin.setContent(
+              '<div style="text-align:center;white-space:nowrap;' +
+                'margin:10px;">单击标记</div>'
+            );
+            //提示窗位置
+            infoWin.setPosition(
+              new qq.maps.LatLng(pointList[i].lat, pointList[i].lng)
+            );
+          });
+        }
+      }
+
+      // qq.maps.event.addListener(map, "click", event => {
+      //   console.log(event);
+      //   const center = new qq.maps.LatLng(event.latLng.lat, event.latLng.lng);
+      //   this.lat = event.latLng.lat;
+      //   this.lng = event.latLng.lng;
+      //   var marker = new qq.maps.Marker({
+      //     position: center,
+      //     map: map
+      //   });
+      // });
     },
 
     async logout() {
@@ -345,6 +403,7 @@ export default {
     submitTap() {
       const data = {
         action: "add_sign_index",
+        _key: this._key,
         Sign_Name: this.Sign_Name,
         Remark: this.Remark,
         Longitude: this.lng,
@@ -352,8 +411,11 @@ export default {
         State: this.State,
         user_id: this.userInfo.USER_ID,
         BUG_ID: this.BUG_ID,
+        Province: this.Province,
+        City: this.City,
         District: "鼓楼区",
-        Street: "和风雅致"
+        Street: "和风雅致",
+        Img: this.Img
       };
       console.log(data, "[[[[[");
       publicApi
@@ -416,6 +478,7 @@ export default {
       publicApi.publicApi(`/ajax/Com_PCInfo.ashx`, data).then(res => {
         console.log(res, "所有标记");
         this.pointList = res.data;
+        this.setMap(res.data);
       });
     }
   }
