@@ -100,6 +100,7 @@
   content: "";
   visibility: hidden;
   height: 0;
+  cursor: pointer;
 }
 .clearfloat {
   zoom: 1;
@@ -257,102 +258,31 @@ export default {
     };
   },
   mounted() {
-    console.log(localStorage.getItem("userinfo"));
     let userInfo = localStorage.getItem("userinfo");
     if (!userInfo) {
       this.$router.replace({ path: "/" });
     } else {
       userInfo = JSON.parse(userInfo);
-      console.log(userInfo, "000000");
       this.userInfo = userInfo;
       this.getBranch();
       this.getPoint();
-      // this.getMyLocation();
     }
   },
   methods: {
-    //第一部分
-    //定位获得当前位置信息
-    getMyLocation() {
-      var geolocation = new qq.maps.Geolocation(
-        Config.mapKey,
-        "江苏银行徐州分行"
-      );
-      geolocation.getLocation(this.showPosition, this.showErr);
-    },
-    showPosition(position) {
-      console.log(position, "-=-=-");
-      this.latitude = position.lat;
-      this.longitude = position.lng;
-      this.city = position.city;
-      // this.setMap();
-    },
-    showErr() {
-      console.log("定位失败");
-      this.getMyLocation(); //定位失败再请求定位，测试使用
-    },
-    //第二部分
     //位置信息在地图上展示
     setMap(pointList) {
-      var center = new qq.maps.LatLng(39.916527, 116.397128);
+      var center = new qq.maps.LatLng(34.26056, 117.18864);
       var map = new qq.maps.Map(document.getElementById("container"), {
         center: center,
         zoom: 13
-      });
-      //创建标记
-      var marker = new qq.maps.Marker({
-        position: center,
-        map: map
       });
       //添加到提示窗
       var info = new qq.maps.InfoWindow({
         map: map
       });
-      //获取标记的点击事件
-      qq.maps.event.addListener(marker, "click", function() {
-        info.open();
-        info.setContent(
-          '<div style="text-align:center;white-space:nowrap;' +
-            'margin:10px;">单击标记</div>'
-        );
-        info.setPosition(center);
-      });
-
-      //步骤：定义map变量 调用 qq.maps.Map() 构造函数   获取地图显示容器
-      //设置地图中心点
-      var myLatlng = new qq.maps.LatLng(
-        "34.267507700250455",
-        "117.1801899067459"
-      );
-      //定义工厂模式函数
-      var myOptions = {
-        zoom: 13, //设置地图缩放级别
-        center: myLatlng, //设置中心点样式
-        mapTypeId: qq.maps.MapTypeId.ROADMAP //设置地图样式详情参见MapType
-      };
-      // //获取dom元素添加地图信息
-      var map = new qq.maps.Map(
-        document.getElementById("container"),
-        myOptions
-      );
-      //第三部分
-      //给定位的位置添加图片标注
-
-      //给定位的位置添加文本标注
-      // var marker = new qq.maps.Label({
-      //   position: myLatlng,
-      //   map: map,
-      //   content: "这是我当前的位置，偏差有点大，哈哈"
-      // });
-
-      //添加提示窗
 
       if (pointList) {
-        var infoWin = new qq.maps.InfoWindow({
-          map: map
-        });
         for (let i = 0; i < pointList.length; i++) {
-          console.log(pointList[i].LATITUDE);
           let marker = new qq.maps.Marker({
             position: new qq.maps.LatLng(
               pointList[i].LATITUDE,
@@ -360,17 +290,18 @@ export default {
             ),
             map: map
           });
-          // marker.SIGN_NAME = pointList[i].SIGN_NAME;
+          marker.SIGN_NAME = pointList[i].SIGN_NAME;
+
           qq.maps.event.addListener(marker, "click", function() {
-            console.log("123987");
-            infoWin.open();
-            infoWin.setContent(
-              '<div style="text-align:center;white-space:nowrap;' +
-                'margin:10px;">单击标记</div>'
+            info.open();
+            info.setContent(
+              `<div style="text-align:center;white-space:nowrap;
+                margin:10px;font-size:14px;color:#333;font-family:Microsoft Yahei;">${
+                  this.SIGN_NAME
+                }</div><button "goWhere('/point')" style="font-size:12px;border:1px solid #006ab8;background:#006ab8;color:#fff;padding:5px 10px;border-radius:5px;margin:0 auto;display:block;cursor: pointer;outline:none;">查看详情</button>`
             );
-            //提示窗位置
-            infoWin.setPosition(
-              new qq.maps.LatLng(pointList[i].lat, pointList[i].lng)
+            info.setPosition(
+              new qq.maps.LatLng(pointList[i].LATITUDE, pointList[i].LONGITUDE)
             );
           });
         }
@@ -386,6 +317,11 @@ export default {
       //     map: map
       //   });
       // });
+    },
+
+    goWhere(path) {
+      // this.$router.push({ path: path });
+      alert("123")
     },
 
     async logout() {
