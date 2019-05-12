@@ -1,51 +1,47 @@
 <template>
   <el-container>
     <el-header>
-      <h4>标记详情</h4>
+      <h4>访客详情</h4>
     </el-header>
     <el-main>
-      <el-table :data="tableData" border style="width: 100%" :row-class-name="tableRowClassName">
-        <el-table-column prop="SIGN_NAME" label="标记名称" width></el-table-column>
-        <el-table-column prop="REMARK" label="标记备注" width></el-table-column>
-        <el-table-column prop="STATETEXT" label="标记状态" width></el-table-column>
-        <el-table-column prop="PROVINCE" label="省" width></el-table-column>
-        <el-table-column prop="CITY" label="市" width></el-table-column>
-        <el-table-column prop="DISTRICT" label="区" width></el-table-column>
-        <el-table-column prop="STREET" label="街道" width></el-table-column>
-      </el-table>
       <el-table
-        :data="activityList"
+        :data="visitorList"
         border
         style="width: 100%;margin-top:50px"
         :row-class-name="tableRowClassName"
       >
+        <el-table-column prop="CALLER_NAME" label="受访人" width></el-table-column>
+        <el-table-column prop="REMARK" label="受访备注" width></el-table-column>
+        <el-table-column prop="CALLER_PHONE" label="受访人电话" width></el-table-column>
+        <el-table-column prop="STATETEXT" label="受访人定位" width></el-table-column>
+        <el-table-column prop="CREATEUSERNAME" label="创建人" width></el-table-column>
+        <el-table-column prop="CREATEDATE" label="创建时间" width></el-table-column>
+        <el-table-column prop="MODIFYUSERNAME" label="修改人" width></el-table-column>
+        <el-table-column prop="MODIFYDATE" label="修改时间" width></el-table-column>
         <el-table-column prop="ACTIVITY_NAME" label="活动名称" width></el-table-column>
-        <el-table-column prop="REMARK" label="活动备注" width></el-table-column>
-        <el-table-column prop="STATETEXT" label="活动状态" width></el-table-column>
-        <el-table-column prop="BEGIN_DATE" label="开始时间" width></el-table-column>
-        <el-table-column prop="END_DATE" label="结束时间" width></el-table-column>
         <el-table-column label="操作">
           <template slot-scope="scope">
             <el-button
               size="mini"
               @click="navigateTo(`/visitor?id=${scope.row.ACTIVITY_ID}`)"
             >查看访客记录</el-button>
-            <el-button size="mini" type="danger" @click="deleteActivity(scope.row.ACTIVITY_ID)">删除</el-button>
+            <el-button size="mini" type="danger" @click="deletePoint(scope.row.CALLER_ID)">删除</el-button>
           </template>
         </el-table-column>
       </el-table>
     </el-main>
     <el-footer>
       <el-row>
-        <el-button type="primary" @click.native="openActivity">添加活动</el-button>
-        <!-- <el-button type="success">修改标记</el-button> -->
-        <el-button type="danger" @click.native="deletePoint">删除标记</el-button>
+        <el-button type="primary" @click.native="openActivity">添加访客</el-button>
       </el-row>
     </el-footer>
-    <el-dialog title="添加活动" :visible.sync="dialogFormVisible" center>
+    <el-dialog title="添加访客" :visible.sync="dialogFormVisible" center>
       <div class="activity">
         <div class="input-item">
-          <el-input v-model="Activity_Name" placeholder="请输入标题"/>
+          <el-input v-model="Caller_Name" placeholder="请输入受访人名称"/>
+        </div>
+        <div class="input-item">
+          <el-input v-model="Caller_Phone" placeholder="请输入受访人电话"/>
         </div>
         <div class="input-item">
           <el-input
@@ -56,7 +52,7 @@
           />
         </div>
         <div class="input-item">
-          <el-select v-model="State" placeholder="请选择开发状态">
+          <el-select v-model="State" placeholder="请选择受访人定位">
             <el-option
               v-for="item in statelist"
               :key="item.value"
@@ -64,15 +60,6 @@
               :value="item.value"
             ></el-option>
           </el-select>
-        </div>
-        <div class="input-item">
-          <el-date-picker
-            v-model="time"
-            type="daterange"
-            range-separator="-"
-            start-placeholder="开始日期"
-            end-placeholder="结束日期"
-          ></el-date-picker>
         </div>
         <div class="input-item">
           <input
@@ -142,43 +129,35 @@ import * as publicApi from "../../api/public";
 export default {
   data() {
     return {
-      tableData: [],
       dialogFormVisible: false,
-      Activity_Name: null,
+      Caller_Name: null,
+      Caller_Phone: null,
       Remark: null,
-      Begin_Date: null,
-      End_Date: null,
       State: null,
-      Sign_ID: null,
+      Activity_ID: null,
       statelist: [
         {
           value: "0",
-          label: "未开始"
+          label: "不可发掘客户"
         },
         {
           value: "1",
-          label: "开始"
+          label: "未跟进客户"
         },
         {
           value: "2",
-          label: "结束"
-        },
-        {
-          value: "3",
-          label: "超时"
+          label: "已跟进客户"
         }
       ],
       Img: "",
-      time: "",
-      activityList: []
+      visitorList: []
     };
   },
   mounted() {
     let userInfo = JSON.parse(localStorage.getItem("userinfo"));
     this.userInfo = userInfo;
-    this._key = this.$route.query._key;
-    this.getOne();
-    this.getActivity();
+    this.activity_id = this.$route.query.id;
+    this.getVisitor();
   },
   methods: {
     tableRowClassName({ row, rowIndex }) {
@@ -197,15 +176,15 @@ export default {
 
     // 提交活动
     submitTap() {
-      let { Activity_Name, Remark, time, State, Img } = this;
-      if (Activity_Name == null) {
+      let { Caller_Name, Remark, Caller_Phone, State, Img } = this;
+      if (Caller_Name == null) {
         this.$message({
           message: "请填写活动名称",
           type: "warning"
         });
-      } else if (time == "") {
+      } else if (Caller_Phone == null) {
         this.$message({
-          message: "请选择时间",
+          message: "请填写电话",
           type: "warning"
         });
       } else if (State == null) {
@@ -215,18 +194,17 @@ export default {
         });
       } else {
         let data = {
-          action: "add_activity_index",
+          action: "add_caller_index",
           _key: "",
-          Activity_Name: Activity_Name,
+          Caller_Name: Caller_Name,
           Remark: Remark,
-          Begin_Date: this.crtTimeFtt(time[0]),
-          End_Date: this.crtTimeFtt(time[1]),
+          Caller_Phone: Caller_Phone,
           State: State,
           Img_1: Img,
           Img_2: "",
           Img_3: "",
           user_id: this.userInfo.USER_ID,
-          Sign_ID: this.tableData[0].SIGN_ID
+          Activity_ID: this.activity_id
         };
         console.log(data);
         publicApi.publicApi("/ajax/Com_PCInfo.ashx", data).then(res => {
@@ -236,7 +214,7 @@ export default {
               type: "success",
               message: "添加成功!"
             });
-            this.getActivity();
+            this.getVisitor();
             this.dialogFormVisible = false;
           }
         });
@@ -286,40 +264,36 @@ export default {
       });
     },
 
-    // 该标注下的所有活动
-    getActivity() {
+    // 该活动下的所有访客
+    getVisitor() {
       let data = {
-        action: "get_activity_index",
+        action: "get_caller_index",
         pageIndex: "1",
         pageSize: "10",
         is_all: "0",
+        activity_id: this.activity_id,
         sign_id: this._key,
         user_id: this.userInfo.USER_ID
       };
       let { tableData } = this;
       publicApi.publicApi("/ajax/Com_PCInfo.ashx", data).then(res => {
         console.log(res, "oooooo");
-        if (res.code == "success") {
-          if (res.data.length != 0) {
-            res.data.forEach(item => {
-              switch (item.STATE) {
-                case "0":
-                  item.STATETEXT = "未开始";
-                  break;
-                case "1":
-                  item.STATETEXT = "开始";
-                  break;
-                case "2":
-                  item.STATETEXT = "结束";
-                  break;
-                case "3":
-                  item.STATETEXT = "超时";
-                  break;
-              }
-            });
-          }
+        if (res.data.length != 0) {
+          res.data.forEach(item => {
+            switch (item.STATE) {
+              case "0":
+                item.STATETEXT = "不可挖掘客";
+                break;
+              case "1":
+                item.STATETEXT = "未跟进";
+                break;
+              case "2":
+                item.STATETEXT = "已跟进";
+                break;
+            }
+          });
         }
-        this.activityList = res.data;
+        this.visitorList = res.data;
       });
     },
     // 选择图片
@@ -340,8 +314,8 @@ export default {
         };
       }
     },
-    // 删除标记
-    deletePoint() {
+    // 删除访客
+    deletePoint(id) {
       this.$confirm("删除该标记, 是否继续?", "提示", {
         confirmButtonText: "确定",
         cancelButtonText: "取消",
@@ -349,39 +323,7 @@ export default {
       })
         .then(() => {
           let data = {
-            action: "del_sign_index",
-            pkVal: this._key,
-            user_id: this.userInfo.USER_ID
-          };
-          publicApi.publicApi("/ajax/Com_PCInfo.ashx", data).then(res => {
-            console.log(res);
-            if (res.code == "success") {
-              this.$message({
-                type: "success",
-                message: "删除成功!"
-              });
-              this.redirectTo("/index");
-            }
-          });
-        })
-        .catch(() => {
-          this.$message({
-            type: "info",
-            message: "已取消删除"
-          });
-        });
-    },
-
-    // 删除活动
-    deleteActivity(id) {
-      this.$confirm("删除该标记, 是否继续?", "提示", {
-        confirmButtonText: "确定",
-        cancelButtonText: "取消",
-        type: "warning"
-      })
-        .then(() => {
-          let data = {
-            action: "del_activity_index",
+            action: "del_caller_index",
             pkVal: id,
             user_id: this.userInfo.USER_ID
           };
@@ -393,7 +335,7 @@ export default {
                 type: "success",
                 message: "删除成功!"
               });
-              this.getActivity();
+              this.getVisitor();
             }
           });
         })
@@ -411,8 +353,8 @@ export default {
     },
 
     navigateTo(path) {
-      // console.log(path)
-      this.$router.push({ path: path });
+      console.log(path);
+      // this.$router.push({ path: path });
     }
   }
 };

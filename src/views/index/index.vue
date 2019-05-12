@@ -3,21 +3,21 @@
     <div class="index-container clearfloat">
       <div class="index-header">
         <div class="index-header-logo">
-          <!-- <img
+          <img
             src="http://www.jsbchina.cn/data/tosend/resource/upload/20170113/f89b6579-9a50-4281-9a08-93d867dc452a.png"
             alt
-          >-->
+          >
         </div>
         <div class="index-header-menu">
           <el-dropdown @command="handleCommand">
             <el-button type="primary">
-              admin
+              {{USER_NAME}}
               <i class="el-icon-arrow-down el-icon--right"/>
             </el-button>
             <el-dropdown-menu slot="dropdown">
-              <el-dropdown-item command="a">个人中心</el-dropdown-item>
+              <!-- <el-dropdown-item command="a">个人中心</el-dropdown-item> -->
               <el-dropdown-item command="b">我的历史标记</el-dropdown-item>
-              <el-dropdown-item command="c">设置</el-dropdown-item>
+              <!-- <el-dropdown-item command="c">设置</el-dropdown-item> -->
               <el-dropdown-item command="d">退出</el-dropdown-item>
             </el-dropdown-menu>
           </el-dropdown>
@@ -31,21 +31,19 @@
               <div class="grid-content bg-purple">
                 <div class="tit">
                   <strong>历史标记展示栏</strong>
-                  <span>更多>></span>
+                  <!-- <span>更多>></span> -->
                 </div>
                 <div class="img-wrapper">
-                  <img
-                    style="width: 100px; height: 100px"
-                    src="https://fuss10.elemecdn.com/e/5d/4a731a90594a4af544c0c25941171jpeg.jpeg"
-                  >
+                  <img v-for="item in imgList" style="width: 100px; height: 100px" :src="item">
                 </div>
               </div>
             </el-col>
             <el-col :span="12">
               <div class="btn-group">
                 <button @click="openDialog">添加标记</button>
-                <button>查看历史标记</button>
-                <button>查看活动</button>
+                <button @click="getPoint" v-if="!showPoint">查看历史标记</button>
+                <button @click="deleteOverlays" v-else>关闭历史标记</button>
+                <!-- <button>查看活动</button> -->
               </div>
             </el-col>
           </el-row>
@@ -76,7 +74,7 @@
           </el-select>
         </div>
         <div class="input-item">
-          <el-select v-model="State" placeholder="请选择分行">
+          <el-select v-model="State" placeholder="请选择开发状态">
             <el-option
               v-for="item in statelist"
               :key="item.value"
@@ -84,6 +82,16 @@
               :value="item.value"
             ></el-option>
           </el-select>
+        </div>
+        <div class="input-item">
+          <input
+            type="file"
+            @change="changeImage($event)"
+            accept="image/gif, image/jpeg, image/jpg, image/png"
+          >
+          <div class="img-list">
+            <img :src="Img" alt>
+          </div>
         </div>
         <div class="btn-group">
           <button @click="submitTap">添加</button>
@@ -191,6 +199,13 @@
 .activity {
   .input-item {
     margin: 30px 0;
+    .img-list {
+      margin: 10px;
+      img {
+        width: 80px;
+        height: 80px;
+      }
+    }
   }
   .btn-group {
     display: flex;
@@ -226,12 +241,16 @@ export default {
   data() {
     return {
       Config,
+      showPoint: false,
       url:
         "https://fuss10.elemecdn.com/e/5d/4a731a90594a4af544c0c25941171jpeg.jpeg",
       dialogFormVisible: false,
       Remark: null,
       Sign_Name: null,
       State: "",
+      markerList: [],
+      textmarkerList: [],
+      addMarkerList: [],
       statelist: [
         {
           value: "0",
@@ -249,12 +268,16 @@ export default {
       branchlist: [],
       BUG_ID: "",
       pageIndex: 1,
-      pageSize: 10,
+      pageSize: 100,
       is_all: 1,
       _key: "",
       Province: "",
       City: "",
-      Img: ""
+      Img: "",
+      lat: null,
+      lng: null,
+      USER_NAME: "",
+      imgList: []
     };
   },
   mounted() {
@@ -264,64 +287,69 @@ export default {
     } else {
       userInfo = JSON.parse(userInfo);
       this.userInfo = userInfo;
+      console.log(userInfo, "90909");
+      this.USER_NAME = userInfo.USER_NAME;
       this.getBranch();
-      this.getPoint();
+      this.init();
+      this.getImg();
     }
   },
   methods: {
-    //位置信息在地图上展示
-    setMap(pointList) {
+    // 地图初始化
+    init() {
+      const that = this;
+      let { addMarkerList, markerList, textmarkerList } = this;
       var center = new qq.maps.LatLng(34.26056, 117.18864);
       var map = new qq.maps.Map(document.getElementById("container"), {
         center: center,
         zoom: 13
       });
-      //添加到提示窗
-      var info = new qq.maps.InfoWindow({
-        map: map
-      });
+      this.map = map;
 
-      if (pointList) {
-        for (let i = 0; i < pointList.length; i++) {
-          let marker = new qq.maps.Marker({
-            position: new qq.maps.LatLng(
-              pointList[i].LATITUDE,
-              pointList[i].LONGITUDE
-            ),
-            map: map
-          });
-          marker.SIGN_NAME = pointList[i].SIGN_NAME;
-
-          qq.maps.event.addListener(marker, "click", function() {
-            info.open();
-            info.setContent(
-              `<div style="text-align:center;white-space:nowrap;
-                margin:10px;font-size:14px;color:#333;font-family:Microsoft Yahei;">${
-                  this.SIGN_NAME
-                }</div><button "goWhere('/point')" style="font-size:12px;border:1px solid #006ab8;background:#006ab8;color:#fff;padding:5px 10px;border-radius:5px;margin:0 auto;display:block;cursor: pointer;outline:none;">查看详情</button>`
-            );
-            info.setPosition(
-              new qq.maps.LatLng(pointList[i].LATITUDE, pointList[i].LONGITUDE)
-            );
-          });
+      qq.maps.event.addListener(map, "click", function(event) {
+        console.log(event, "-=-=-=-=-");
+        that.showPoint = false;
+        var anchor = new qq.maps.Point(0, 39),
+          size = new qq.maps.Size(42, 68),
+          origin = new qq.maps.Point(0, 0),
+          icon = new qq.maps.MarkerImage(
+            "/static/images/location.png",
+            size,
+            origin,
+            anchor
+          );
+        // if (markerList.length != 0) {
+        //   for (let i = 0; i < markerList.length; i++) {
+        //     markerList[i].setMap(null);
+        //     textmarkerList[i].setMap(null);
+        //   }
+        //   this.markerList = [];
+        //   this.textmarkerList = [];
+        // }
+        if (addMarkerList.length != 0) {
+          for (let i = 0; i < addMarkerList.length; i++) {
+            addMarkerList[i].setMap(null);
+          }
+          this.addMarkerList = [];
         }
-      }
-
-      // qq.maps.event.addListener(map, "click", event => {
-      //   console.log(event);
-      //   const center = new qq.maps.LatLng(event.latLng.lat, event.latLng.lng);
-      //   this.lat = event.latLng.lat;
-      //   this.lng = event.latLng.lng;
-      //   var marker = new qq.maps.Marker({
-      //     position: center,
-      //     map: map
-      //   });
-      // });
+        let position = new qq.maps.LatLng(
+          event.latLng.getLat(),
+          event.latLng.getLng()
+        );
+        that.lat = event.latLng.getLat();
+        that.lng = event.latLng.getLng();
+        let addMarker = new qq.maps.Marker({
+          position: position,
+          map: map
+        });
+        addMarker.setIcon(icon);
+        addMarkerList.push(addMarker);
+        that.addMarkerList = addMarkerList;
+      });
     },
 
     goWhere(path) {
-      // this.$router.push({ path: path });
-      alert("123")
+      this.$router.push({ path: path });
     },
 
     async logout() {
@@ -331,8 +359,25 @@ export default {
 
     // 开启弹窗
     openDialog() {
-      this.dialogFormVisible = true;
-      console.log(this.lng);
+      let { lng, lat } = this;
+      if (lng == null || lat == null) {
+        this.$message({
+          message: "请在地图上点选您要添加的标记点",
+          type: "warning"
+        });
+      } else {
+        this.dialogFormVisible = true;
+        let geocoder = new qq.maps.Geocoder();
+        var latLng = new qq.maps.LatLng(this.lat, this.lng);
+        //对指定经纬度进行解析
+        geocoder.getAddress(latLng);
+        geocoder.setComplete(result => {
+          this.Province = result.detail.addressComponents.province;
+          this.City = result.detail.addressComponents.city;
+          this.District = result.detail.addressComponents.district;
+          this.Street = result.detail.addressComponents.street;
+        });
+      }
     },
 
     // 提交新增标记
@@ -349,22 +394,46 @@ export default {
         BUG_ID: this.BUG_ID,
         Province: this.Province,
         City: this.City,
-        District: "鼓楼区",
-        Street: "和风雅致",
+        District: this.District,
+        Street: this.Street,
         Img: this.Img
       };
-      console.log(data, "[[[[[");
-      publicApi
-        .publicApi("/ajax/Com_PCInfo.ashx", data)
-        .then(res => {
-          console.log(res, "llll");
-        })
-        .catch(err => {
-          this.$message({
-            message: "服务器出现错误",
-            type: "warning"
-          });
+      if (this.Sign_Name == null) {
+        this.$message({
+          message: "请填写标记名称",
+          type: "warning"
         });
+      } else if (this.State == "") {
+        this.$message({
+          message: "请选择开发状态",
+          type: "warning"
+        });
+      } else if (this.BUG_ID == "") {
+        this.$message({
+          message: "请选择分行信息",
+          type: "warning"
+        });
+      } else {
+        publicApi
+          .publicApi("/ajax/Com_PCInfo.ashx", data)
+          .then(res => {
+            console.log(res, "llll");
+            if (res.code == "success") {
+              this.$message({
+                type: "success",
+                message: "添加成功!"
+              });
+              this.getPoint();
+              this.dialogFormVisible = false;
+            }
+          })
+          .catch(err => {
+            this.$message({
+              message: "服务器出现错误",
+              type: "warning"
+            });
+          });
+      }
     },
 
     handleCommand(command) {
@@ -384,6 +453,10 @@ export default {
               message: "已取消退出"
             });
           });
+      } else if (command == "b") {
+        if (this.markerList.length == 0) {
+          this.getPoint();
+        }
       }
     },
     // 跳转
@@ -404,6 +477,9 @@ export default {
 
     // 获取所有标记
     getPoint() {
+      this.showPoint = true;
+      let { map, markerList } = this;
+      let that = this;
       let data = {
         action: "get_sign_index",
         pageIndex: this.pageIndex,
@@ -411,11 +487,109 @@ export default {
         is_all: this.is_all,
         user_id: this.userInfo.USER_ID
       };
+
       publicApi.publicApi(`/ajax/Com_PCInfo.ashx`, data).then(res => {
         console.log(res, "所有标记");
         this.pointList = res.data;
-        this.setMap(res.data);
+        let pointList = res.data;
+
+        var info = new qq.maps.InfoWindow({
+          map: map
+        });
+
+        if (pointList) {
+          for (let i = 0; i < pointList.length; i++) {
+            let position = new qq.maps.LatLng(
+              pointList[i].LATITUDE,
+              pointList[i].LONGITUDE
+            );
+            let marker = new qq.maps.Marker({
+              position: position,
+              map: map
+            });
+            let style = {
+              color: "#006ab8",
+              fontSize: "14px",
+              fontWeight: "bold",
+              background: "#fff",
+              padding: "5px 10px",
+              borderRadius: "5px"
+            };
+            let textmarker = new qq.maps.Label({
+              position: position,
+              map: map,
+              content: pointList[i].SIGN_NAME,
+              style: style
+            });
+            this.markerList.push(marker);
+            this.textmarkerList.push(textmarker);
+            marker.SIGN_NAME = pointList[i].SIGN_NAME;
+            marker.SIGN_ID = pointList[i].SIGN_ID;
+
+            qq.maps.event.addListener(marker, "click", function() {
+              that.goWhere(`/point?_key=${this.SIGN_ID}`);
+            });
+          }
+        }
       });
+    },
+
+    // 获取图片
+    getImg() {
+      let data = {
+        action: "get_sign_index",
+        pageIndex: this.pageIndex,
+        pageSize: this.pageSize,
+        is_all: this.is_all,
+        user_id: this.userInfo.USER_ID
+      };
+      let { imgList, Config } = this;
+      console.log(Config, "-------");
+
+      publicApi.publicApi(`/ajax/Com_PCInfo.ashx`, data).then(res => {
+        if (res.code == "success") {
+          if (res.data.length != 0) {
+            res.data.forEach(item => {
+              imgList.push(`${Config.server}${item.IMG}`);
+            });
+            this.imgList = imgList;
+            console.log(this.imgList);
+          }
+        }
+      });
+    },
+
+    // 隐藏标记
+    deleteOverlays() {
+      this.showPoint = false;
+      let { markerList, textmarkerList } = this;
+      if (markerList.length != 0) {
+        for (let i = 0; i < markerList.length; i++) {
+          markerList[i].setMap(null);
+          textmarkerList[i].setMap(null);
+        }
+        this.markerList = [];
+        this.textmarkerList = [];
+      }
+    },
+
+    // 选择图片
+    changeImage(e) {
+      console.log(e);
+      let file = e.target.files[0];
+      if (file) {
+        this.file = file;
+        console.log(this.file);
+        let reader = new FileReader();
+        let that = this;
+        reader.readAsDataURL(file);
+        reader.onload = function(e) {
+          // 这里的this 指向reader
+          console.log(e);
+          that.avatar = this.result;
+          that.Img = this.result;
+        };
+      }
     }
   }
 };

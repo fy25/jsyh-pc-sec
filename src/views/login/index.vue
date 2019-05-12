@@ -8,7 +8,7 @@
       label-position="left"
     >
       <div class="title-container">
-        <!-- <h3 class="title">江苏银行员工系统</h3> -->
+        <h3 class="title">江苏银行员工系统</h3>
         <lang-select class="set-language" />
       </div>
 
@@ -52,7 +52,7 @@
         @click.native.prevent="handleLogin"
       >{{ $t('login.logIn') }}</el-button>
 
-      <div style="position:relative">
+      <!-- <div style="position:relative">
         <div class="tips">
           <span>{{ $t('login.username') }} : admin</span>
           <span>{{ $t('login.password') }} : {{ $t('login.any') }}</span>
@@ -62,10 +62,10 @@
           <span>{{ $t('login.password') }} : {{ $t('login.any') }}</span>
         </div>
 
-        <!-- <el-button class="thirdparty-button" type="primary" @click="showDialog=true">
+        <el-button class="thirdparty-button" type="primary" @click="showDialog=true">
           {{ $t('login.thirdparty') }}
-        </el-button>-->
-      </div>
+        </el-button>
+      </div> -->
     </el-form>
 
     <el-dialog :title="$t('login.thirdparty')" :visible.sync="showDialog">
