@@ -9,6 +9,24 @@
           >
         </div>
         <div class="index-header-menu">
+          <div class="search-input" @click="goWhere('/search')">{{poiname}}</div>
+          <!-- <el-select
+            v-model="address"
+            multiple
+            filterable
+            remote
+            reserve-keyword
+            placeholder="请输入关键词"
+            :remote-method="remoteMethod"
+            :loading="loading"
+          >
+            <el-option
+              v-for="item in addressList"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value"
+            ></el-option>
+          </el-select>-->
           <el-dropdown @command="handleCommand">
             <el-button type="primary">
               {{USER_NAME}}
@@ -132,6 +150,21 @@
       width: 800px;
       background-color: #006ab8;
       text-align: right;
+      position: relative;
+      .search-input {
+        cursor: text;
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        background-color: #fff;
+        left: 3%;
+        width: 200px;
+        text-align: left;
+        height: 36px;
+        line-height: 36px;
+        padding: 0 10px;
+        border-radius: 5px;
+      }
       .el-button {
         border-radius: 0;
         height: 56px;
@@ -240,6 +273,9 @@ export default {
   components: {},
   data() {
     return {
+      addressList: [],
+      address: [],
+      loading: false,
       Config,
       showPoint: false,
       url:
@@ -277,7 +313,8 @@ export default {
       lat: null,
       lng: null,
       USER_NAME: "",
-      imgList: []
+      imgList: [],
+      poiname: "输入查询地点"
     };
   },
   mounted() {
@@ -285,29 +322,60 @@ export default {
     if (!userInfo) {
       this.$router.replace({ path: "/" });
     } else {
+      if (localStorage.getItem("lat")) {
+        console.log(localStorage.getItem("lat"), "-=-=-=-");
+        this.lat = localStorage.getItem("lat");
+        this.lng = localStorage.getItem("lng");
+        this.poiname = localStorage.getItem("poiname");
+      }
       userInfo = JSON.parse(userInfo);
       this.userInfo = userInfo;
-      console.log(userInfo, "90909");
       this.USER_NAME = userInfo.USER_NAME;
       this.getBranch();
       this.init();
       this.getImg();
     }
   },
+  destroyed() {
+    console.log(333333333333);
+    localStorage.removeItem("lat");
+    localStorage.removeItem("lng");
+    localStorage.removeItem("poiname");
+  },
   methods: {
     // 地图初始化
     init() {
       const that = this;
       let { addMarkerList, markerList, textmarkerList } = this;
-      var center = new qq.maps.LatLng(34.26056, 117.18864);
+      if (this.lat != null) {
+        var center = new qq.maps.LatLng(this.lat, this.lng);
+      } else {
+        var center = new qq.maps.LatLng(34.26056, 117.18864);
+      }
       var map = new qq.maps.Map(document.getElementById("container"), {
         center: center,
         zoom: 13
       });
       this.map = map;
-
+      if (this.lat != null) {
+        let anchor = new qq.maps.Point(0, 39),
+          size = new qq.maps.Size(42, 68),
+          origin = new qq.maps.Point(0, 0),
+          icon = new qq.maps.MarkerImage(
+            "/static/images/location.png",
+            size,
+            origin,
+            anchor
+          );
+        let storagePoint = new qq.maps.LatLng(this.lat, this.lng);
+        var storagemarker = new qq.maps.Marker({
+          position: storagePoint,
+          map: map
+        });
+        addMarkerList.push(storagemarker);
+        storagemarker.setIcon(icon);
+      }
       qq.maps.event.addListener(map, "click", function(event) {
-        console.log(event, "-=-=-=-=-");
         that.showPoint = false;
         var anchor = new qq.maps.Point(0, 39),
           size = new qq.maps.Size(42, 68),
@@ -318,14 +386,6 @@ export default {
             origin,
             anchor
           );
-        // if (markerList.length != 0) {
-        //   for (let i = 0; i < markerList.length; i++) {
-        //     markerList[i].setMap(null);
-        //     textmarkerList[i].setMap(null);
-        //   }
-        //   this.markerList = [];
-        //   this.textmarkerList = [];
-        // }
         if (addMarkerList.length != 0) {
           for (let i = 0; i < addMarkerList.length; i++) {
             addMarkerList[i].setMap(null);
@@ -470,7 +530,6 @@ export default {
         action: "get_user_group_index"
       };
       publicApi.publicApi(`/ajax/Com_PCInfo.ashx`, data).then(res => {
-        console.log(res, "88888");
         this.branchlist = res.data;
       });
     },

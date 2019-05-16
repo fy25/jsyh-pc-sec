@@ -5,5 +5,10 @@ function publicApi(url, params) {
     return Base.post(url, params)
 }
 
+function get(url, params) {
+    return Base.get(url, params)
+}
 
-export { publicApi }
+
+
+export { publicApi, get }

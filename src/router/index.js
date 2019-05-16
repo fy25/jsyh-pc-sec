@@ -63,6 +63,12 @@ export const constantRoutes = [
         hidden: true
     },
     {
+        path: '/search',
+        component: () =>
+            import ('@/views/search/search'),
+        hidden: true
+    },
+    {
         path: '/point',
         component: () =>
             import ('@/views/point/point'),
