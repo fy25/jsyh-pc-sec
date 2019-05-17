@@ -108,7 +108,7 @@
             accept="image/gif, image/jpeg, image/jpg, image/png"
           >
           <div class="img-list">
-            <img :src="Img" alt>
+            <img v-for="item in uploadImg" :src="item" alt>
           </div>
         </div>
         <div class="btn-group">
@@ -237,6 +237,7 @@
       img {
         width: 80px;
         height: 80px;
+        margin: 0 10px;
       }
     }
   }
@@ -314,7 +315,8 @@ export default {
       lng: null,
       USER_NAME: "",
       imgList: [],
-      poiname: "输入查询地点"
+      poiname: "输入查询地点",
+      uploadImg: []
     };
   },
   mounted() {
@@ -442,7 +444,13 @@ export default {
 
     // 提交新增标记
     submitTap() {
-      const data = {
+      let img = null;
+      if (this.uploadImg.length > 0) {
+        img = this.uploadImg.join("|");
+      } else {
+        img = this.uploadImg;
+      }
+      let data = {
         action: "add_sign_index",
         _key: this._key,
         Sign_Name: this.Sign_Name,
@@ -456,7 +464,7 @@ export default {
         City: this.City,
         District: this.District,
         Street: this.Street,
-        Img: this.Img
+        Img: img
       };
       if (this.Sign_Name == null) {
         this.$message({
@@ -603,13 +611,21 @@ export default {
         user_id: this.userInfo.USER_ID
       };
       let { imgList, Config } = this;
-      console.log(Config, "-------");
 
       publicApi.publicApi(`/ajax/Com_PCInfo.ashx`, data).then(res => {
         if (res.code == "success") {
+          console.log(res, "-------");
           if (res.data.length != 0) {
             res.data.forEach(item => {
-              imgList.push(`${Config.server}${item.IMG}`);
+              if (item.IMG.indexOf(",") != -1) {
+                let temp = item.IMG.split(",");
+                console.log(temp,"jsjsjjsjsjsj")
+                temp.forEach(item => {
+                  imgList.push(`${Config.server}${item}`);
+                });
+              } else {
+                imgList.push(`${Config.server}${item.IMG}`);
+              }
             });
             this.imgList = imgList;
             console.log(this.imgList);
@@ -635,6 +651,7 @@ export default {
     // 选择图片
     changeImage(e) {
       console.log(e);
+      let { uploadImg } = this;
       let file = e.target.files[0];
       if (file) {
         this.file = file;
@@ -645,8 +662,9 @@ export default {
         reader.onload = function(e) {
           // 这里的this 指向reader
           console.log(e);
-          that.avatar = this.result;
           that.Img = this.result;
+          uploadImg.push(this.result);
+          that.uploadImg = uploadImg;
         };
       }
     }

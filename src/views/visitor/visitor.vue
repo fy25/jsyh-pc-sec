@@ -68,7 +68,7 @@
             accept="image/gif, image/jpeg, image/jpg, image/png"
           >
           <div class="img-list">
-            <img :src="Img" alt>
+            <img v-for="item in uploadImg" :src="item" alt>
           </div>
         </div>
         <div class="btn-group">
@@ -95,6 +95,7 @@
       img {
         width: 80px;
         height: 80px;
+        margin: 0 10px;
       }
     }
   }
@@ -150,7 +151,8 @@ export default {
         }
       ],
       Img: "",
-      visitorList: []
+      visitorList: [],
+      uploadImg: []
     };
   },
   mounted() {
@@ -176,6 +178,12 @@ export default {
 
     // 提交活动
     submitTap() {
+      let img = null;
+      if (this.uploadImg.length > 0) {
+        img = this.uploadImg.join("|");
+      } else {
+        img = this.uploadImg;
+      }
       let { Caller_Name, Remark, Caller_Phone, State, Img } = this;
       if (Caller_Name == null) {
         this.$message({
@@ -200,9 +208,7 @@ export default {
           Remark: Remark,
           Caller_Phone: Caller_Phone,
           State: State,
-          Img_1: Img,
-          Img_2: "",
-          Img_3: "",
+          Img: img,
           user_id: this.userInfo.USER_ID,
           Activity_ID: this.activity_id
         };
@@ -299,6 +305,7 @@ export default {
     // 选择图片
     changeImage(e) {
       console.log(e);
+      let { uploadImg } = this;
       let file = e.target.files[0];
       if (file) {
         this.file = file;
@@ -309,7 +316,8 @@ export default {
         reader.onload = function(e) {
           // 这里的this 指向reader
           console.log(e);
-          that.avatar = this.result;
+          uploadImg.push(this.result);
+          that.uploadImg = uploadImg;
           that.Img = this.result;
         };
       }

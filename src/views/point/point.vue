@@ -81,7 +81,7 @@
             accept="image/gif, image/jpeg, image/jpg, image/png"
           >
           <div class="img-list">
-            <img :src="Img" alt>
+            <img v-for="item in uploadImg" :src="item" alt>
           </div>
         </div>
         <div class="btn-group">
@@ -108,6 +108,7 @@
       img {
         width: 80px;
         height: 80px;
+        margin: 0 10px;
       }
     }
   }
@@ -170,7 +171,8 @@ export default {
       ],
       Img: "",
       time: "",
-      activityList: []
+      activityList: [],
+      uploadImg: []
     };
   },
   mounted() {
@@ -197,7 +199,13 @@ export default {
 
     // 提交活动
     submitTap() {
-      let { Activity_Name, Remark, time, State, Img } = this;
+      let img = null;
+      if (this.uploadImg.length > 0) {
+        img = this.uploadImg.join("|");
+      } else {
+        img = this.uploadImg;
+      }
+      let { Activity_Name, Remark, time, State } = this;
       if (Activity_Name == null) {
         this.$message({
           message: "请填写活动名称",
@@ -222,9 +230,7 @@ export default {
           Begin_Date: this.crtTimeFtt(time[0]),
           End_Date: this.crtTimeFtt(time[1]),
           State: State,
-          Img_1: Img,
-          Img_2: "",
-          Img_3: "",
+          Img: img,
           user_id: this.userInfo.USER_ID,
           Sign_ID: this.tableData[0].SIGN_ID
         };
@@ -325,6 +331,7 @@ export default {
     // 选择图片
     changeImage(e) {
       console.log(e);
+      let { uploadImg } = this;
       let file = e.target.files[0];
       if (file) {
         this.file = file;
@@ -335,7 +342,8 @@ export default {
         reader.onload = function(e) {
           // 这里的this 指向reader
           console.log(e);
-          that.avatar = this.result;
+          uploadImg.push(this.result);
+          that.uploadImg = uploadImg;
           that.Img = this.result;
         };
       }
