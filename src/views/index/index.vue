@@ -10,23 +10,6 @@
         </div>
         <div class="index-header-menu">
           <div class="search-input" @click="goWhere('/search')">{{poiname}}</div>
-          <!-- <el-select
-            v-model="address"
-            multiple
-            filterable
-            remote
-            reserve-keyword
-            placeholder="请输入关键词"
-            :remote-method="remoteMethod"
-            :loading="loading"
-          >
-            <el-option
-              v-for="item in addressList"
-              :key="item.value"
-              :label="item.label"
-              :value="item.value"
-            ></el-option>
-          </el-select>-->
           <el-dropdown @command="handleCommand">
             <el-button type="primary">
               {{USER_NAME}}
@@ -51,8 +34,17 @@
                   <strong>历史标记展示栏</strong>
                   <!-- <span>更多>></span> -->
                 </div>
-                <div class="img-wrapper">
+                <!-- <div class="img-wrapper">
                   <img v-for="item in imgList" style="width: 100px; height: 100px" :src="item">
+                </div>-->
+                <div class="history-point">
+                  <div class="point-item" v-for="item in historyList">
+                    <h3>{{item.SIGN_NAME}}</h3>
+                    <p>
+                      <span>{{item.REMARK}}</span>
+                      <span>{{item.CREATEDATE}}</span>
+                    </p>
+                  </div>
                 </div>
               </div>
             </el-col>
@@ -70,6 +62,16 @@
     </div>
     <el-dialog title="添加活动" :visible.sync="dialogFormVisible" center>
       <div class="activity">
+        <div class="input-item">
+          <el-select v-model="IsPublic" placeholder="请选择类型">
+            <el-option
+              v-for="item in publiclist"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value"
+            ></el-option>
+          </el-select>
+        </div>
         <div class="input-item">
           <el-input v-model="Sign_Name" placeholder="请输入标题"/>
         </div>
@@ -189,6 +191,7 @@
     display: flex;
     justify-content: space-between;
     align-items: baseline;
+    margin-bottom: 10px;
     strong {
       font-size: 16px;
     }
@@ -265,6 +268,36 @@
     }
   }
 }
+.point-item {
+  padding: 2px 10px;
+  box-sizing: border-box;
+  border-radius: 6px;
+}
+.point-item:nth-child(odd) {
+  background-color: #eeeeee;
+}
+.point-item:nth-child(even) {
+  background-color: #fff;
+}
+.point-item p {
+  font-size: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+.point-item p span:first-child {
+  width: 80%;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+.point-item p span:last-child {
+  width: 20%;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: 14px;
+  color: #999;
+}
 </style>
 
 <script>
@@ -302,8 +335,19 @@ export default {
           label: "已开发"
         }
       ],
+      publiclist: [
+        {
+          value: "0",
+          label: "对公"
+        },
+        {
+          value: "1",
+          label: "零售"
+        }
+      ],
       branchlist: [],
       BUG_ID: "",
+      IsPublic: null,
       pageIndex: 1,
       pageSize: 100,
       is_all: 1,
@@ -316,7 +360,8 @@ export default {
       USER_NAME: "",
       imgList: [],
       poiname: "输入查询地点",
-      uploadImg: []
+      uploadImg: [],
+      historyList: []
     };
   },
   mounted() {
@@ -325,7 +370,6 @@ export default {
       this.$router.replace({ path: "/" });
     } else {
       if (localStorage.getItem("lat")) {
-        console.log(localStorage.getItem("lat"), "-=-=-=-");
         this.lat = localStorage.getItem("lat");
         this.lng = localStorage.getItem("lng");
         this.poiname = localStorage.getItem("poiname");
@@ -336,10 +380,10 @@ export default {
       this.getBranch();
       this.init();
       this.getImg();
+      this.getPoint()
     }
   },
   destroyed() {
-    console.log(333333333333);
     localStorage.removeItem("lat");
     localStorage.removeItem("lng");
     localStorage.removeItem("poiname");
@@ -447,6 +491,8 @@ export default {
       let img = null;
       if (this.uploadImg.length > 0) {
         img = this.uploadImg.join("|");
+      } else if (this.uploadImg.length == 0) {
+        img = "";
       } else {
         img = this.uploadImg;
       }
@@ -454,7 +500,7 @@ export default {
         action: "add_sign_index",
         _key: this._key,
         Sign_Name: this.Sign_Name,
-        Remark: this.Remark,
+        Remark: encodeURI(this.Remark),
         Longitude: this.lng,
         Latitude: this.lat,
         State: this.State,
@@ -464,7 +510,8 @@ export default {
         City: this.City,
         District: this.District,
         Street: this.Street,
-        Img: img
+        Img: img,
+        IsPublic: this.IsPublic
       };
       if (this.Sign_Name == null) {
         this.$message({
@@ -474,6 +521,11 @@ export default {
       } else if (this.State == "") {
         this.$message({
           message: "请选择开发状态",
+          type: "warning"
+        });
+      } else if (this.IsPublic == null) {
+        this.$message({
+          message: "请选择标记类型",
           type: "warning"
         });
       } else if (this.BUG_ID == "") {
@@ -505,7 +557,6 @@ export default {
     },
 
     handleCommand(command) {
-      // this.$message('click on item ' + command);
       if (command == "d") {
         this.$confirm("退出前请及时保存您的数据", "提示", {
           confirmButtonText: "确定",
@@ -557,8 +608,16 @@ export default {
 
       publicApi.publicApi(`/ajax/Com_PCInfo.ashx`, data).then(res => {
         console.log(res, "所有标记");
+        res.data.forEach(item => {
+          item.REMARK = decodeURI(item.REMARK);
+        });
         this.pointList = res.data;
         let pointList = res.data;
+        if (pointList.length >= 5) {
+          this.historyList = pointList.slice(0, 4);
+        } else {
+          this.historyList = pointList;
+        }
 
         var info = new qq.maps.InfoWindow({
           map: map
@@ -614,12 +673,10 @@ export default {
 
       publicApi.publicApi(`/ajax/Com_PCInfo.ashx`, data).then(res => {
         if (res.code == "success") {
-          console.log(res, "-------");
           if (res.data.length != 0) {
             res.data.forEach(item => {
               if (item.IMG.indexOf(",") != -1) {
                 let temp = item.IMG.split(",");
-                console.log(temp,"jsjsjjsjsjsj")
                 temp.forEach(item => {
                   imgList.push(`${Config.server}${item}`);
                 });
@@ -628,7 +685,6 @@ export default {
               }
             });
             this.imgList = imgList;
-            console.log(this.imgList);
           }
         }
       });

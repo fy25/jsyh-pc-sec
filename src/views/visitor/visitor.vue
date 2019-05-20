@@ -181,6 +181,8 @@ export default {
       let img = null;
       if (this.uploadImg.length > 0) {
         img = this.uploadImg.join("|");
+      } else if (this.uploadImg.length == 0) {
+        img = "";
       } else {
         img = this.uploadImg;
       }
@@ -205,7 +207,7 @@ export default {
           action: "add_caller_index",
           _key: "",
           Caller_Name: Caller_Name,
-          Remark: Remark,
+          Remark: encodeURI(Remark),
           Caller_Phone: Caller_Phone,
           State: State,
           Img: img,
@@ -286,6 +288,7 @@ export default {
         console.log(res, "oooooo");
         if (res.data.length != 0) {
           res.data.forEach(item => {
+            item.REMARK = decodeURI(item.REMARK);
             switch (item.STATE) {
               case "0":
                 item.STATETEXT = "不可挖掘客";

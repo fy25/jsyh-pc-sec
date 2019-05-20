@@ -202,6 +202,8 @@ export default {
       let img = null;
       if (this.uploadImg.length > 0) {
         img = this.uploadImg.join("|");
+      } else if (this.uploadImg.length == 0) {
+        img = "";
       } else {
         img = this.uploadImg;
       }
@@ -226,7 +228,7 @@ export default {
           action: "add_activity_index",
           _key: "",
           Activity_Name: Activity_Name,
-          Remark: Remark,
+          Remark: encodeURI(Remark),
           Begin_Date: this.crtTimeFtt(time[0]),
           End_Date: this.crtTimeFtt(time[1]),
           State: State,
@@ -308,6 +310,7 @@ export default {
         if (res.code == "success") {
           if (res.data.length != 0) {
             res.data.forEach(item => {
+              item.REMARK = decodeURI(item.REMARK);
               switch (item.STATE) {
                 case "0":
                   item.STATETEXT = "未开始";
