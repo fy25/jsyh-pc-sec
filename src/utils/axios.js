@@ -43,7 +43,15 @@ export function post(url, data = {}) {
     return new Promise((resolve, reject) => {
         axios.post(url, data)
             .then(response => {
-                resolve(response.data);
+                console.log(response, "axios")
+                let source = response.data
+                if (typeof source == 'object') {
+                    source = source
+                } else {
+                    source = source.replace(/[\r\n]/g, "")
+                    source = JSON.parse(source)
+                }
+                resolve(source);
             }, err => {
                 reject(err)
             })

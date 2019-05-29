@@ -17,7 +17,7 @@
             </el-button>
             <el-dropdown-menu slot="dropdown">
               <!-- <el-dropdown-item command="a">个人中心</el-dropdown-item> -->
-              <el-dropdown-item command="b">我的历史标记</el-dropdown-item>
+              <!-- <el-dropdown-item command="b">我的历史标记</el-dropdown-item> -->
               <!-- <el-dropdown-item command="c">设置</el-dropdown-item> -->
               <el-dropdown-item command="d">退出</el-dropdown-item>
             </el-dropdown-menu>
@@ -62,7 +62,7 @@
     </div>
     <el-dialog title="添加活动" :visible.sync="dialogFormVisible" center>
       <div class="activity">
-        <div class="input-item">
+        <!-- <div class="input-item">
           <el-select v-model="IsPublic" placeholder="请选择类型">
             <el-option
               v-for="item in publiclist"
@@ -71,7 +71,7 @@
               :value="item.value"
             ></el-option>
           </el-select>
-        </div>
+        </div>-->
         <div class="input-item">
           <el-input v-model="Sign_Name" placeholder="请输入标题"/>
         </div>
@@ -116,6 +116,17 @@
         <div class="btn-group">
           <button @click="submitTap">添加</button>
         </div>
+      </div>
+    </el-dialog>
+
+    <el-dialog title="请选择标记类型" :visible.sync="categoryVisible" center>
+      <el-select v-model="IsPublic" placeholder="请选择活动区域">
+        <el-option label="公司部" value="0"></el-option>
+        <el-option label="零售部" value="1"></el-option>
+      </el-select>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="categoryVisible = false">取 消</el-button>
+        <el-button type="primary" @click="dialogFormVisible=true">确 定</el-button>
       </div>
     </el-dialog>
   </div>
@@ -361,7 +372,8 @@ export default {
       imgList: [],
       poiname: "输入查询地点",
       uploadImg: [],
-      historyList: []
+      historyList: [],
+      categoryVisible: false //选择分类
     };
   },
   mounted() {
@@ -380,7 +392,7 @@ export default {
       this.getBranch();
       this.init();
       this.getImg();
-      this.getPoint()
+      this.getPoint();
     }
   },
   destroyed() {
@@ -472,7 +484,7 @@ export default {
           type: "warning"
         });
       } else {
-        this.dialogFormVisible = true;
+        this.categoryVisible = true;
         let geocoder = new qq.maps.Geocoder();
         var latLng = new qq.maps.LatLng(this.lat, this.lng);
         //对指定经纬度进行解析
