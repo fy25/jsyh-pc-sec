@@ -6,13 +6,14 @@
     <el-main>
       <el-table :data="tableData" border style="width: 100%" :row-class-name="tableRowClassName">
         <el-table-column prop="SIGN_NAME" label="标记名称" width></el-table-column>
-        <el-table-column prop="REMARK" label="标记备注" width></el-table-column>
+        <el-table-column prop="CENAME" label="企事业单位" width></el-table-column>
         <el-table-column prop="STATETEXT" label="标记状态" width></el-table-column>
         <el-table-column prop="PROVINCE" label="省" width></el-table-column>
         <el-table-column prop="CITY" label="市" width></el-table-column>
         <el-table-column prop="DISTRICT" label="区" width></el-table-column>
         <el-table-column prop="STREET" label="街道" width></el-table-column>
       </el-table>
+
       <el-table
         :data="activityList"
         border
@@ -56,6 +57,9 @@
           />
         </div>
         <div class="input-item">
+          <el-input v-model="Url" placeholder="请输入链接"/>
+        </div>
+        <!-- <div class="input-item">
           <el-select v-model="State" placeholder="请选择开发状态">
             <el-option
               v-for="item in statelist"
@@ -64,7 +68,7 @@
               :value="item.value"
             ></el-option>
           </el-select>
-        </div>
+        </div>-->
         <div class="input-item">
           <el-date-picker
             v-model="time"
@@ -172,7 +176,8 @@ export default {
       Img: "",
       time: "",
       activityList: [],
-      uploadImg: []
+      uploadImg: [],
+      Url: ""
     };
   },
   mounted() {
@@ -207,7 +212,7 @@ export default {
       } else {
         img = this.uploadImg;
       }
-      let { Activity_Name, Remark, time, State } = this;
+      let { Activity_Name, Remark, time, State, Url } = this;
       if (Activity_Name == null) {
         this.$message({
           message: "请填写活动名称",
@@ -216,11 +221,6 @@ export default {
       } else if (time == "") {
         this.$message({
           message: "请选择时间",
-          type: "warning"
-        });
-      } else if (State == null) {
-        this.$message({
-          message: "请选择状态",
           type: "warning"
         });
       } else {
@@ -234,7 +234,8 @@ export default {
           State: State,
           Img: img,
           user_id: this.userInfo.USER_ID,
-          Sign_ID: this.tableData[0].SIGN_ID
+          Sign_ID: this.tableData[0].SIGN_ID,
+          Url: Url
         };
         console.log(data);
         publicApi.publicApi("/ajax/Com_PCInfo.ashx", data).then(res => {
@@ -300,7 +301,7 @@ export default {
         action: "get_activity_index",
         pageIndex: "1",
         pageSize: "10",
-        is_all: "0",
+        is_all: "1",
         sign_id: this._key,
         user_id: this.userInfo.USER_ID
       };

@@ -278,7 +278,7 @@ export default {
         action: "get_caller_index",
         pageIndex: "1",
         pageSize: "10",
-        is_all: "0",
+        is_all: "1",
         activity_id: this.activity_id,
         sign_id: this._key,
         user_id: this.userInfo.USER_ID
