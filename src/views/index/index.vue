@@ -35,11 +35,8 @@
                   <strong>历史标记展示栏</strong>
                   <!-- <span>更多>></span> -->
                 </div>
-                <!-- <div class="img-wrapper">
-                  <img v-for="item in imgList" style="width: 100px; height: 100px" :src="item">
-                </div>-->
                 <div class="history-point">
-                  <div class="point-item" v-for="item in historyList">
+                  <div class="point-item" v-for="(item,index) in historyList" :key="index">
                     <h3>{{item.SIGN_NAME}}</h3>
                     <p>
                       <span>{{item.CENAME}}</span>
@@ -131,8 +128,8 @@
 
     <el-dialog title="请选择标记类型" :visible.sync="categoryVisible" center>
       <el-select v-model="IsPublic" placeholder="请选择标记类型">
-        <el-option label="公司部" value="0"></el-option>
-        <el-option label="零售部" value="1"></el-option>
+        <el-option label="公司业务部" value="0"></el-option>
+        <el-option label="零售业务部" value="1"></el-option>
       </el-select>
       <div slot="footer" class="dialog-footer">
         <el-button @click="categoryVisible = false">取 消</el-button>
@@ -144,8 +141,18 @@
     <el-dialog title="筛选条件" :visible.sync="filter">
       <div class="filter-item">
         <el-select v-model="ispublic" placeholder="请选择活动区域">
-          <el-option label="公司部" value="0"></el-option>
-          <el-option label="零售部" value="1"></el-option>
+          <el-option label="公司业务部" value="0"></el-option>
+          <el-option label="零售业务部" value="1"></el-option>
+        </el-select>
+      </div>
+      <div class="filter-item">
+        <el-select v-model="name" placeholder="请选择标记名称">
+          <el-option
+            v-for="(item,index ) in pointList"
+            :key="index"
+            :label="item.SIGN_NAME"
+            :value="item.SIGN_NAME"
+          ></el-option>
         </el-select>
       </div>
       <div class="filter-item">
@@ -158,8 +165,13 @@
         ></el-date-picker>
       </div>
       <div class="filter-item">
+        <el-checkbox
+          :indeterminate="isIndeterminate"
+          v-model="checkAll"
+          @change="handleCheckAllChange"
+        >全选</el-checkbox>
         <el-checkbox-group v-model="checkList">
-          <el-checkbox v-for="item in branchlist" :label="item.USERGROUP_NAME"></el-checkbox>
+          <el-checkbox v-for="(item,index) in branchlist" :key="index" :label="item.USERGROUP_NAME"></el-checkbox>
         </el-checkbox-group>
       </div>
       <div slot="footer" class="dialog-footer">
@@ -426,7 +438,10 @@ export default {
       EndExpand: "",
       filter: false, //筛选
       time: "",
-      checkList: []
+      checkList: [],
+      isIndeterminate: true,
+      checkAll: false,
+      pointList: []
     };
   },
   mounted() {
@@ -519,6 +534,17 @@ export default {
       });
     },
 
+    // 全选
+    handleCheckAllChange(val) {
+      console.log(val);
+      let temp = [];
+      this.branchlist.forEach(item => {
+        temp.push(item.USERGROUP_NAME);
+      });
+      this.checkList = val ? temp : [];
+      this.isIndeterminate = false;
+    },
+
     goWhere(path) {
       this.$router.push({ path: path });
     },
@@ -553,14 +579,6 @@ export default {
 
     // 提交新增标记
     submitTap() {
-      // let img = null;
-      // if (this.uploadImg.length > 0) {
-      //   img = this.uploadImg.join("|");
-      // } else if (this.uploadImg.length == 0) {
-      //   img = "";
-      // } else {
-      //   img = this.uploadImg;
-      // }
       let data = {
         action: "add_sign_index",
         _key: this._key,
@@ -570,7 +588,7 @@ export default {
         Latitude: this.lat,
         State: this.State,
         user_id: this.userInfo.USER_ID,
-        BUG_ID: this.BUG_ID,
+        BUG_ID: this.userInfo.USERGROUP_ID,
         Province: this.Province,
         City: this.City,
         District: this.District,
@@ -690,10 +708,11 @@ export default {
     // 获取分行信息
     getBranch() {
       let data = {
-        action: "get_user_group_index"
+        action: "get_user_group_index",
+        user_id: this.userInfo.USER_ID,
+        bug_id: this.userInfo.USERGROUP_ID
       };
       publicApi.publicApi(`/ajax/Com_PCInfo.ashx`, data).then(res => {
-        console.log(res, "90909");
         this.branchlist = res.data;
       });
     },
@@ -727,11 +746,14 @@ export default {
       publicApi.publicApi(`/ajax/Com_PCInfo.ashx`, data).then(res => {
         console.log(res, "所有标记");
         if (res.code == "error") {
-          this.deleteOverlays()
+          this.deleteOverlays();
         } else {
+          let nameList = [];
           res.data.forEach(item => {
             item.REMARK = decodeURI(item.REMARK);
+            nameList.push(item.SIGN_NAME);
           });
+          this.nameList = nameList;
           this.pointList = res.data;
           let pointList = res.data;
           if (pointList.length >= 5) {
@@ -772,6 +794,28 @@ export default {
               this.textmarkerList.push(textmarker);
               marker.SIGN_NAME = pointList[i].SIGN_NAME;
               marker.SIGN_ID = pointList[i].SIGN_ID;
+
+              var anchor = new qq.maps.Point(0, 39),
+                size = new qq.maps.Size(64, 64),
+                origin = new qq.maps.Point(0, 0);
+              let iconPer = new qq.maps.MarkerImage(
+                "/static/images/location-per.png",
+                size,
+                origin,
+                anchor
+              );
+              let iconPub = new qq.maps.MarkerImage(
+                "/static/images/location-pub.png",
+                size,
+                origin,
+                anchor
+              );
+
+              if (pointList[i].ISPUBLIC == "0") {
+                marker.setIcon(iconPub);
+              } else {
+                marker.setIcon(iconPer);
+              }
 
               qq.maps.event.addListener(marker, "click", function() {
                 that.goWhere(`/point?_key=${this.SIGN_ID}`);
@@ -861,7 +905,7 @@ export default {
     },
 
     filterTap() {
-      let { branchlist, checkList, begin_date, end_date } = this;
+      let { branchlist, checkList, begin_date, end_date, name } = this;
       let tempList = [];
       branchlist.forEach(o => {
         if (checkList.indexOf(o.USERGROUP_NAME) != -1) {
@@ -876,6 +920,7 @@ export default {
       console.log(this.begin_date);
       this.getPoint();
       this.filter = false;
+      // this.init()
     }
   }
 };
