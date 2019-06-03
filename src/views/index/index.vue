@@ -148,7 +148,7 @@
       <div class="filter-item">
         <el-select v-model="name" placeholder="请选择标记名称">
           <el-option
-            v-for="(item,index ) in pointList"
+            v-for="(item,index ) in nameList"
             :key="index"
             :label="item.SIGN_NAME"
             :value="item.SIGN_NAME"
@@ -441,7 +441,8 @@ export default {
       checkList: [],
       isIndeterminate: true,
       checkAll: false,
-      pointList: []
+      pointList: [],
+      nameList: []
     };
   },
   mounted() {
@@ -461,6 +462,7 @@ export default {
       this.init();
       this.getImg();
       this.getPoint();
+      this.getName();
     }
   },
   destroyed() {
@@ -722,13 +724,14 @@ export default {
       this.showPoint = true;
       let {
         map,
-        markerList,
+        // markerList,
         bug_id,
         begin_date,
         end_date,
         ispublic,
         name
       } = this;
+      let markerList = [];
       let that = this;
       let data = {
         action: "get_sign_index",
@@ -748,12 +751,9 @@ export default {
         if (res.code == "error") {
           this.deleteOverlays();
         } else {
-          let nameList = [];
           res.data.forEach(item => {
             item.REMARK = decodeURI(item.REMARK);
-            nameList.push(item.SIGN_NAME);
           });
-          this.nameList = nameList;
           this.pointList = res.data;
           let pointList = res.data;
           if (pointList.length >= 5) {
@@ -822,6 +822,46 @@ export default {
               });
             }
           }
+        }
+      });
+    },
+    // 获取所有标记名
+    getName() {
+      this.showPoint = true;
+      let {
+        map,
+        // markerList,
+        bug_id,
+        begin_date,
+        end_date,
+        ispublic,
+        name
+      } = this;
+      let markerList = [];
+      let that = this;
+      let data = {
+        action: "get_sign_index",
+        pageIndex: this.pageIndex,
+        pageSize: this.pageSize,
+        is_all: this.is_all,
+        user_id: this.userInfo.USER_ID,
+        bug_id,
+        begin_date,
+        end_date,
+        ispublic,
+        name
+      };
+
+      publicApi.publicApi(`/ajax/Com_PCInfo.ashx`, data).then(res => {
+        console.log(res, "所有标记");
+        if (res.code == "error") {
+          this.deleteOverlays();
+        } else {
+          let list = res.data;
+          list.unshift({
+            SIGN_NAME: "不筛选标记名"
+          });
+          this.nameList = res.data;
         }
       });
     },
@@ -906,6 +946,10 @@ export default {
 
     filterTap() {
       let { branchlist, checkList, begin_date, end_date, name } = this;
+      console.log(name);
+      if (name == "不筛选标记名") {
+        this.name = "";
+      }
       let tempList = [];
       branchlist.forEach(o => {
         if (checkList.indexOf(o.USERGROUP_NAME) != -1) {
@@ -918,9 +962,9 @@ export default {
         this.end_date = this.crtTimeFtt(this.time[1]);
       }
       console.log(this.begin_date);
+      this.deleteOverlays();
       this.getPoint();
       this.filter = false;
-      // this.init()
     }
   }
 };

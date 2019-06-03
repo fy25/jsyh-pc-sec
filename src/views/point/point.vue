@@ -5,11 +5,11 @@
     </el-header>
     <el-main>
       <el-table :data="tableData" border style="width: 100%" :row-class-name="tableRowClassName">
+        <el-table-column prop="STATETEXT" label="标记类型"></el-table-column>
         <el-table-column prop="SIGN_NAME" label="标记名称"></el-table-column>
         <el-table-column prop="CENAME" label="社区/企事业单位名称"></el-table-column>
         <el-table-column prop="EXPAND" label="该社区/企事业单位总人数" v-if="ISPUBLIC=='1'"></el-table-column>
         <el-table-column prop="ENDEXPAND" label="该社区/企事业单位已拓展人数" v-if="ISPUBLIC=='1'"></el-table-column>
-        <el-table-column prop="STATETEXT" label="标记类型"></el-table-column>
         <el-table-column label="操作">
           <template slot-scope="scope">
             <el-button size="mini" type="primary" @click="openPoint">编辑标记</el-button>
@@ -83,8 +83,8 @@
           </div>
         </div>
         <div class="btn-group">
-          <button @click="submitTap" v-if="editActivity">修改</button>
-          <button @click="submitTap(this._key)" v-else>添加</button>
+          <button @click="submitTap(true)" v-if="editActivity">修改</button>
+          <button @click="submitTap(false)" v-else>添加</button>
         </div>
       </div>
     </el-dialog>
@@ -203,6 +203,7 @@ export default {
       ENDEXPAND: "",
       EXPAND: "",
       IsPublic: "",
+      ISPUBLIC: "",
       LATITUDE: "",
       LONGITUDE: "",
       PROVINCE: "",
@@ -218,7 +219,7 @@ export default {
   mounted() {
     let userInfo = JSON.parse(localStorage.getItem("userinfo"));
     this.userInfo = userInfo;
-    this._key = this.$route.query._key;
+    this.sign_id = this.$route.query._key;
     this.getOne();
     this.getActivity();
   },
@@ -262,6 +263,7 @@ export default {
 
     // 提交活动
     submitTap(id) {
+      console.log(this.tableData);
       let img = null;
       if (this.uploadImg.length > 0) {
         img = this.uploadImg.join("|");
@@ -296,9 +298,11 @@ export default {
           Url: Url
         };
         if (id) {
+          console.log("iu该")
           this.editActivity = true;
           data._key = this._key;
         } else {
+          console.log("正常添加")
           this.editActivity = false;
         }
         console.log(data);
@@ -334,7 +338,7 @@ export default {
       this.tableData = [];
       let data = {
         action: "get_sign_object",
-        _key: this._key,
+        _key: this.sign_id,
         user_id: this.userInfo.USER_ID
       };
       let { tableData } = this;
@@ -381,7 +385,7 @@ export default {
         pageIndex: "1",
         pageSize: "10",
         is_all: "1",
-        sign_id: this._key,
+        sign_id: this.sign_id,
         user_id: this.userInfo.USER_ID
       };
       let { tableData } = this;
