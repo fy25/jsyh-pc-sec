@@ -68,7 +68,7 @@
             accept="image/gif, image/jpeg, image/jpg, image/png"
           >
           <div class="img-list">
-            <img :src="Img" alt>
+            <img v-for="item in uploadImg" :src="item" alt>
           </div>
         </div>
         <div class="btn-group">
@@ -95,6 +95,7 @@
       img {
         width: 80px;
         height: 80px;
+        margin: 0 10px;
       }
     }
   }
@@ -150,7 +151,8 @@ export default {
         }
       ],
       Img: "",
-      visitorList: []
+      visitorList: [],
+      uploadImg: []
     };
   },
   mounted() {
@@ -176,6 +178,14 @@ export default {
 
     // 提交活动
     submitTap() {
+      let img = null;
+      if (this.uploadImg.length > 0) {
+        img = this.uploadImg.join("|");
+      } else if (this.uploadImg.length == 0) {
+        img = "";
+      } else {
+        img = this.uploadImg;
+      }
       let { Caller_Name, Remark, Caller_Phone, State, Img } = this;
       if (Caller_Name == null) {
         this.$message({
@@ -197,12 +207,10 @@ export default {
           action: "add_caller_index",
           _key: "",
           Caller_Name: Caller_Name,
-          Remark: Remark,
+          Remark: encodeURI(Remark),
           Caller_Phone: Caller_Phone,
           State: State,
-          Img_1: Img,
-          Img_2: "",
-          Img_3: "",
+          Img: img,
           user_id: this.userInfo.USER_ID,
           Activity_ID: this.activity_id
         };
@@ -270,7 +278,7 @@ export default {
         action: "get_caller_index",
         pageIndex: "1",
         pageSize: "10",
-        is_all: "0",
+        is_all: "1",
         activity_id: this.activity_id,
         sign_id: this._key,
         user_id: this.userInfo.USER_ID
@@ -280,6 +288,7 @@ export default {
         console.log(res, "oooooo");
         if (res.data.length != 0) {
           res.data.forEach(item => {
+            item.REMARK = decodeURI(item.REMARK);
             switch (item.STATE) {
               case "0":
                 item.STATETEXT = "不可挖掘客";
@@ -299,6 +308,7 @@ export default {
     // 选择图片
     changeImage(e) {
       console.log(e);
+      let { uploadImg } = this;
       let file = e.target.files[0];
       if (file) {
         this.file = file;
@@ -309,7 +319,8 @@ export default {
         reader.onload = function(e) {
           // 这里的this 指向reader
           console.log(e);
-          that.avatar = this.result;
+          uploadImg.push(this.result);
+          that.uploadImg = uploadImg;
           that.Img = this.result;
         };
       }

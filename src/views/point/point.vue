@@ -5,32 +5,39 @@
     </el-header>
     <el-main>
       <el-table :data="tableData" border style="width: 100%" :row-class-name="tableRowClassName">
-        <el-table-column prop="SIGN_NAME" label="标记名称" width></el-table-column>
-        <el-table-column prop="REMARK" label="标记备注" width></el-table-column>
-        <el-table-column prop="STATETEXT" label="标记状态" width></el-table-column>
-        <el-table-column prop="PROVINCE" label="省" width></el-table-column>
-        <el-table-column prop="CITY" label="市" width></el-table-column>
-        <el-table-column prop="DISTRICT" label="区" width></el-table-column>
-        <el-table-column prop="STREET" label="街道" width></el-table-column>
+        <el-table-column prop="SIGN_NAME" label="标记名称"></el-table-column>
+        <el-table-column prop="CENAME" label="社区/企事业单位名称"></el-table-column>
+        <el-table-column prop="EXPAND" label="该社区/企事业单位总人数" v-if="ISPUBLIC=='1'"></el-table-column>
+        <el-table-column prop="ENDEXPAND" label="该社区/企事业单位已拓展人数" v-if="ISPUBLIC=='1'"></el-table-column>
+        <el-table-column prop="STATETEXT" label="标记类型"></el-table-column>
+        <el-table-column label="操作">
+          <template slot-scope="scope">
+            <el-button size="mini" type="primary" @click="openPoint">编辑标记</el-button>
+            <el-button size="mini" type="danger" @click.native="deletePoint">删除标记</el-button>
+          </template>
+        </el-table-column>
       </el-table>
+
       <el-table
         :data="activityList"
         border
         style="width: 100%;margin-top:50px"
         :row-class-name="tableRowClassName"
       >
-        <el-table-column prop="ACTIVITY_NAME" label="活动名称" width></el-table-column>
-        <el-table-column prop="REMARK" label="活动备注" width></el-table-column>
-        <el-table-column prop="STATETEXT" label="活动状态" width></el-table-column>
-        <el-table-column prop="BEGIN_DATE" label="开始时间" width></el-table-column>
-        <el-table-column prop="END_DATE" label="结束时间" width></el-table-column>
+        <el-table-column prop="ACTIVITY_NAME" label="活动名称"></el-table-column>
+        <el-table-column prop="REMARK" label="活动备注"></el-table-column>
+        <el-table-column prop="URL" label="URL链接"></el-table-column>
+        <el-table-column prop="BEGIN_DATE" label="开始时间"></el-table-column>
+        <el-table-column prop="END_DATE" label="结束时间"></el-table-column>
+        <!-- <el-table-column label="图片">
+          <template slot-scope="scope">
+            <img v-for="(item,inde) in scope.row.imgList" :src="item" alt>
+          </template>
+        </el-table-column>-->
         <el-table-column label="操作">
           <template slot-scope="scope">
-            <el-button
-              size="mini"
-              @click="navigateTo(`/visitor?id=${scope.row.ACTIVITY_ID}`)"
-            >查看访客记录</el-button>
-            <el-button size="mini" type="danger" @click="deleteActivity(scope.row.ACTIVITY_ID)">删除</el-button>
+            <el-button size="mini" type="primary" @click="openActicity(scope.row.ACTIVITY_ID)">编辑活动</el-button>
+            <el-button size="mini" type="danger" @click="deleteActivity(scope.row.ACTIVITY_ID)">删除活动</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -38,8 +45,6 @@
     <el-footer>
       <el-row>
         <el-button type="primary" @click.native="openActivity">添加活动</el-button>
-        <!-- <el-button type="success">修改标记</el-button> -->
-        <el-button type="danger" @click.native="deletePoint">删除标记</el-button>
       </el-row>
     </el-footer>
     <el-dialog title="添加活动" :visible.sync="dialogFormVisible" center>
@@ -56,14 +61,7 @@
           />
         </div>
         <div class="input-item">
-          <el-select v-model="State" placeholder="请选择开发状态">
-            <el-option
-              v-for="item in statelist"
-              :key="item.value"
-              :label="item.label"
-              :value="item.value"
-            ></el-option>
-          </el-select>
+          <el-input v-model="Url" placeholder="请输入链接"/>
         </div>
         <div class="input-item">
           <el-date-picker
@@ -81,11 +79,33 @@
             accept="image/gif, image/jpeg, image/jpg, image/png"
           >
           <div class="img-list">
-            <img :src="Img" alt>
+            <img v-for="item in uploadImg" :src="item" alt>
           </div>
         </div>
         <div class="btn-group">
-          <button @click="submitTap">添加</button>
+          <button @click="submitTap" v-if="editActivity">修改</button>
+          <button @click="submitTap(this._key)" v-else>添加</button>
+        </div>
+      </div>
+    </el-dialog>
+
+    <!-- 标记 -->
+    <el-dialog title="修改标记" :visible.sync="pointDialog" center>
+      <div class="activity">
+        <div class="input-item">
+          <el-input v-model="SIGN_NAME" :value="SIGN_NAME" placeholder="请输入标题"/>
+        </div>
+        <div class="input-item">
+          <el-input v-model="CENAME" :value="CENAME" placeholder="请输入企事业单位名称"/>
+        </div>
+        <div class="input-item" v-if="IsPublic!=0">
+          <el-input v-model="EXPAND" :value="EXPAND" placeholder="请输入拓展人数"/>
+        </div>
+        <div class="input-item" v-if="IsPublic!=0">
+          <el-input v-model="ENDEXPAND" :value="ENDEXPAND" placeholder="请输入已拓展人数"/>
+        </div>
+        <div class="btn-group">
+          <button @click="editTap">修改</button>
         </div>
       </div>
     </el-dialog>
@@ -108,6 +128,7 @@
       img {
         width: 80px;
         height: 80px;
+        margin: 0 10px;
       }
     }
   }
@@ -139,9 +160,11 @@
 
 <script>
 import * as publicApi from "../../api/public";
+import { Config } from "../../utils/config";
 export default {
   data() {
     return {
+      Config,
       tableData: [],
       dialogFormVisible: false,
       Activity_Name: null,
@@ -170,7 +193,26 @@ export default {
       ],
       Img: "",
       time: "",
-      activityList: []
+      activityList: [],
+      uploadImg: [],
+      Url: "",
+      pointDialog: false,
+      BUG_ID: "",
+      CENAME: "",
+      CITY: "",
+      ENDEXPAND: "",
+      EXPAND: "",
+      IsPublic: "",
+      LATITUDE: "",
+      LONGITUDE: "",
+      PROVINCE: "",
+      REMARK: "",
+      SIGN_ID: "",
+      SIGN_NAME: "",
+      STATE: "",
+      STREET: "",
+      DISTRICT: "",
+      editActivity: false
     };
   },
   mounted() {
@@ -195,9 +237,40 @@ export default {
       this.dialogFormVisible = true;
     },
 
+    // 获取单条活动
+    getActivityOne(id) {
+      let data = {
+        action: "get_activity_object",
+        _key: id,
+        user_id: this.userInfo.USER_ID
+      };
+      publicApi.publicApi("/ajax/Com_PCInfo.ashx", data).then(res => {
+        console.log(res, "yuyuyuyuy");
+        this.Activity_Name = res.data.ACTIVITY_NAME;
+        this.Remark = decodeURI(res.data.REMARK);
+        this.Url = res.data.URL;
+      });
+    },
+
+    // 开启活动修改
+    openActicity(id) {
+      this.getActivityOne(id);
+      this.dialogFormVisible = true;
+      this.editActivity = true;
+      this._key = id;
+    },
+
     // 提交活动
-    submitTap() {
-      let { Activity_Name, Remark, time, State, Img } = this;
+    submitTap(id) {
+      let img = null;
+      if (this.uploadImg.length > 0) {
+        img = this.uploadImg.join("|");
+      } else if (this.uploadImg.length == 0) {
+        img = "";
+      } else {
+        img = this.uploadImg;
+      }
+      let { Activity_Name, Remark, time, State, Url } = this;
       if (Activity_Name == null) {
         this.$message({
           message: "请填写活动名称",
@@ -208,33 +281,33 @@ export default {
           message: "请选择时间",
           type: "warning"
         });
-      } else if (State == null) {
-        this.$message({
-          message: "请选择状态",
-          type: "warning"
-        });
       } else {
         let data = {
           action: "add_activity_index",
           _key: "",
           Activity_Name: Activity_Name,
-          Remark: Remark,
+          Remark: encodeURI(Remark),
           Begin_Date: this.crtTimeFtt(time[0]),
           End_Date: this.crtTimeFtt(time[1]),
           State: State,
-          Img_1: Img,
-          Img_2: "",
-          Img_3: "",
+          Img: img,
           user_id: this.userInfo.USER_ID,
-          Sign_ID: this.tableData[0].SIGN_ID
+          Sign_ID: this.tableData[0].SIGN_ID,
+          Url: Url
         };
+        if (id) {
+          this.editActivity = true;
+          data._key = this._key;
+        } else {
+          this.editActivity = false;
+        }
         console.log(data);
         publicApi.publicApi("/ajax/Com_PCInfo.ashx", data).then(res => {
           console.log(res);
           if (res.code == "success") {
             this.$message({
               type: "success",
-              message: "添加成功!"
+              message: "成功"
             });
             this.getActivity();
             this.dialogFormVisible = false;
@@ -258,41 +331,56 @@ export default {
 
     // 获取单条数据
     getOne() {
+      this.tableData = [];
       let data = {
         action: "get_sign_object",
         _key: this._key,
         user_id: this.userInfo.USER_ID
       };
       let { tableData } = this;
-      console.log("/ajax/Com_PCInfo.ashx", data);
       publicApi.publicApi("/ajax/Com_PCInfo.ashx", data).then(res => {
         console.log(res, "lllll");
         if (res.code == "success") {
-          switch (res.data.STATE) {
+          switch (res.data.ISPUBLIC) {
             case "0":
-              res.data.STATETEXT = "未开发";
+              res.data.STATETEXT = "公司业务部";
               break;
             case "1":
-              res.data.STATETEXT = "正在开发";
+              res.data.STATETEXT = "零售业务部";
               break;
-            case "2":
-              res.data.STATETEXT = "已开发";
+            case "&nbsp;":
+              res.data.STATETEXT = "老数据无法读取类型";
               break;
           }
           tableData.push(res.data);
           this.tableData = tableData;
-          console.log(this.tableData);
+          this.BUG_ID = res.data.BUG_ID;
+          this.CENAME = res.data.CENAME;
+          this.CITY = res.data.CITY;
+          this.ENDEXPAND = res.data.ENDEXPAND;
+          this.EXPAND = res.data.EXPAND;
+          this.ISPUBLIC = res.data.ISPUBLIC;
+          this.LATITUDE = res.data.LATITUDE;
+          this.LONGITUDE = res.data.LONGITUDE;
+          this.PROVINCE = res.data.PROVINCE;
+          this.REMARK = res.data.REMARK;
+          this.SIGN_ID = res.data.SIGN_ID;
+          this.SIGN_NAME = res.data.SIGN_NAME;
+          this.STATE = res.data.STATE;
+          this.STREET = res.data.STREET;
+          this.IMG = "";
         }
       });
     },
 
     // 该标注下的所有活动
     getActivity() {
+      let that = this;
       let data = {
         action: "get_activity_index",
         pageIndex: "1",
         pageSize: "10",
-        is_all: "0",
+        is_all: "1",
         sign_id: this._key,
         user_id: this.userInfo.USER_ID
       };
@@ -302,29 +390,29 @@ export default {
         if (res.code == "success") {
           if (res.data.length != 0) {
             res.data.forEach(item => {
-              switch (item.STATE) {
-                case "0":
-                  item.STATETEXT = "未开始";
-                  break;
-                case "1":
-                  item.STATETEXT = "开始";
-                  break;
-                case "2":
-                  item.STATETEXT = "结束";
-                  break;
-                case "3":
-                  item.STATETEXT = "超时";
-                  break;
+              item.REMARK = decodeURI(item.REMARK);
+              let imgList = [];
+              if (item.IMG.indexOf(",") != -1) {
+                imgList = item.IMG.split(",");
+                let temp = [];
+                imgList.forEach(sub => {
+                  temp.push(`${this.Config.server}${sub}`);
+                });
+                item.imgList = temp;
+              } else {
+                item.imgList = `${this.Config.server}${item.IMG}`;
               }
             });
           }
         }
         this.activityList = res.data;
+        console.log(this.activityList, "pppp");
       });
     },
     // 选择图片
     changeImage(e) {
       console.log(e);
+      let { uploadImg } = this;
       let file = e.target.files[0];
       if (file) {
         this.file = file;
@@ -335,7 +423,8 @@ export default {
         reader.onload = function(e) {
           // 这里的this 指向reader
           console.log(e);
-          that.avatar = this.result;
+          uploadImg.push(this.result);
+          that.uploadImg = uploadImg;
           that.Img = this.result;
         };
       }
@@ -413,6 +502,110 @@ export default {
     navigateTo(path) {
       // console.log(path)
       this.$router.push({ path: path });
+    },
+
+    // 打开修改标记
+    openPoint() {
+      this.pointDialog = true;
+    },
+
+    // 修改标记
+    editTap() {
+      let data = {
+        action: "add_sign_index",
+        _key: this._key,
+        Sign_Name: this.SIGN_NAME,
+        Remark: encodeURI(this.Remark),
+        Longitude: this.LONGITUDE,
+        Latitude: this.LATITUDE,
+        State: this.STATE,
+        user_id: this.userInfo.USER_ID,
+        BUG_ID: this.BUG_ID,
+        Province: this.PROVINCE,
+        City: this.CITY,
+        District: this.DISTRICT,
+        Street: this.STREET,
+        Img: "",
+        IsPublic: this.ISPUBLIC,
+        CEName: this.CENAME
+      };
+      if (this.ISPUBLIC == 1) {
+        data.Expand = this.EXPAND;
+        data.EndExpand = this.ENDEXPAND;
+        if (this.SIGN_NAME == "") {
+          this.$message({
+            message: "请填写标记名称",
+            type: "warning"
+          });
+        } else if (this.CENAME == "") {
+          this.$message({
+            message: "请输入企事业单位名称",
+            type: "warning"
+          });
+        } else if (this.EXPAND == "") {
+          this.$message({
+            message: "请输入拓展人数",
+            type: "warning"
+          });
+        } else if (this.ENDEXPAND == "") {
+          this.$message({
+            message: "请输入已拓展人数",
+            type: "warning"
+          });
+        } else {
+          publicApi
+            .publicApi("/ajax/Com_PCInfo.ashx", data)
+            .then(res => {
+              console.log(res, "llll");
+              if (res.code == "success") {
+                this.$message({
+                  type: "success",
+                  message: "修改成功!"
+                });
+                this.pointDialog = false;
+                this.getOne();
+              }
+            })
+            .catch(err => {
+              this.$message({
+                message: "服务器出现错误",
+                type: "warning"
+              });
+            });
+        }
+      } else {
+        if (this.SIGN_NAME == "") {
+          this.$message({
+            message: "请填写标记名称",
+            type: "warning"
+          });
+        } else if (this.CENAME == "") {
+          this.$message({
+            message: "请输入企事业单位名称",
+            type: "warning"
+          });
+        } else {
+          publicApi
+            .publicApi("/ajax/Com_PCInfo.ashx", data)
+            .then(res => {
+              console.log(res, "llll");
+              if (res.code == "success") {
+                this.$message({
+                  type: "success",
+                  message: "修改成功!"
+                });
+                this.pointDialog = false;
+                this.getOne();
+              }
+            })
+            .catch(err => {
+              this.$message({
+                message: "服务器出现错误",
+                type: "warning"
+              });
+            });
+        }
+      }
     }
   }
 };

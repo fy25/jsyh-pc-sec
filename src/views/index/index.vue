@@ -10,23 +10,7 @@
         </div>
         <div class="index-header-menu">
           <div class="search-input" @click="goWhere('/search')">{{poiname}}</div>
-          <!-- <el-select
-            v-model="address"
-            multiple
-            filterable
-            remote
-            reserve-keyword
-            placeholder="请输入关键词"
-            :remote-method="remoteMethod"
-            :loading="loading"
-          >
-            <el-option
-              v-for="item in addressList"
-              :key="item.value"
-              :label="item.label"
-              :value="item.value"
-            ></el-option>
-          </el-select>-->
+          <el-button @click.native="filter=true">筛选</el-button>
           <el-dropdown @command="handleCommand">
             <el-button type="primary">
               {{USER_NAME}}
@@ -34,7 +18,7 @@
             </el-button>
             <el-dropdown-menu slot="dropdown">
               <!-- <el-dropdown-item command="a">个人中心</el-dropdown-item> -->
-              <el-dropdown-item command="b">我的历史标记</el-dropdown-item>
+              <!-- <el-dropdown-item command="b">我的历史标记</el-dropdown-item> -->
               <!-- <el-dropdown-item command="c">设置</el-dropdown-item> -->
               <el-dropdown-item command="d">退出</el-dropdown-item>
             </el-dropdown-menu>
@@ -51,8 +35,14 @@
                   <strong>历史标记展示栏</strong>
                   <!-- <span>更多>></span> -->
                 </div>
-                <div class="img-wrapper">
-                  <img v-for="item in imgList" style="width: 100px; height: 100px" :src="item">
+                <div class="history-point">
+                  <div class="point-item" v-for="(item,index) in historyList" :key="index">
+                    <h3>{{item.SIGN_NAME}}</h3>
+                    <p>
+                      <span>{{item.CENAME}}</span>
+                      <span>{{item.CREATEDATE}}</span>
+                    </p>
+                  </div>
                 </div>
               </div>
             </el-col>
@@ -68,12 +58,31 @@
         </div>
       </div>
     </div>
-    <el-dialog title="添加活动" :visible.sync="dialogFormVisible" center>
+    <el-dialog title="添加标记" :visible.sync="dialogFormVisible" center>
       <div class="activity">
+        <!-- <div class="input-item">
+          <el-select v-model="IsPublic" placeholder="请选择类型">
+            <el-option
+              v-for="item in publiclist"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value"
+            ></el-option>
+          </el-select>
+        </div>-->
         <div class="input-item">
           <el-input v-model="Sign_Name" placeholder="请输入标题"/>
         </div>
         <div class="input-item">
+          <el-input v-model="CEName" placeholder="请输入企事业单位名称"/>
+        </div>
+        <div class="input-item" v-if="IsPublic!=0">
+          <el-input v-model="Expand" placeholder="请输入拓展人数"/>
+        </div>
+        <div class="input-item" v-if="IsPublic!=0">
+          <el-input v-model="EndExpand" placeholder="请输入已拓展人数"/>
+        </div>
+        <!-- <div class="input-item">
           <el-input
             v-model="Remark"
             type="textarea"
@@ -108,12 +117,66 @@
             accept="image/gif, image/jpeg, image/jpg, image/png"
           >
           <div class="img-list">
-            <img :src="Img" alt>
+            <img v-for="item in uploadImg" :src="item" alt>
           </div>
-        </div>
+        </div>-->
         <div class="btn-group">
           <button @click="submitTap">添加</button>
         </div>
+      </div>
+    </el-dialog>
+
+    <el-dialog title="请选择标记类型" :visible.sync="categoryVisible" center>
+      <el-select v-model="IsPublic" placeholder="请选择标记类型">
+        <el-option label="公司业务部" value="0"></el-option>
+        <el-option label="零售业务部" value="1"></el-option>
+      </el-select>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="categoryVisible = false">取 消</el-button>
+        <el-button type="primary" @click="dialogFormVisible=true">确 定</el-button>
+      </div>
+    </el-dialog>
+
+    <!-- 筛选 -->
+    <el-dialog title="筛选条件" :visible.sync="filter">
+      <div class="filter-item">
+        <el-select v-model="ispublic" placeholder="请选择活动区域">
+          <el-option label="公司业务部" value="0"></el-option>
+          <el-option label="零售业务部" value="1"></el-option>
+        </el-select>
+      </div>
+      <div class="filter-item">
+        <el-select v-model="name" placeholder="请选择标记名称">
+          <el-option
+            v-for="(item,index ) in pointList"
+            :key="index"
+            :label="item.SIGN_NAME"
+            :value="item.SIGN_NAME"
+          ></el-option>
+        </el-select>
+      </div>
+      <div class="filter-item">
+        <el-date-picker
+          v-model="time"
+          type="daterange"
+          range-separator="-"
+          start-placeholder="开始日期"
+          end-placeholder="结束日期"
+        ></el-date-picker>
+      </div>
+      <div class="filter-item">
+        <el-checkbox
+          :indeterminate="isIndeterminate"
+          v-model="checkAll"
+          @change="handleCheckAllChange"
+        >全选</el-checkbox>
+        <el-checkbox-group v-model="checkList">
+          <el-checkbox v-for="(item,index) in branchlist" :key="index" :label="item.USERGROUP_NAME"></el-checkbox>
+        </el-checkbox-group>
+      </div>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="dialogFormVisible = false">取 消</el-button>
+        <el-button type="primary" @click="filterTap">确 定</el-button>
       </div>
     </el-dialog>
   </div>
@@ -189,6 +252,7 @@
     display: flex;
     justify-content: space-between;
     align-items: baseline;
+    margin-bottom: 10px;
     strong {
       font-size: 16px;
     }
@@ -237,6 +301,7 @@
       img {
         width: 80px;
         height: 80px;
+        margin: 0 10px;
       }
     }
   }
@@ -263,6 +328,39 @@
       color: #fff;
     }
   }
+}
+.point-item {
+  padding: 2px 10px;
+  box-sizing: border-box;
+  border-radius: 6px;
+}
+.point-item:nth-child(odd) {
+  background-color: #eeeeee;
+}
+.point-item:nth-child(even) {
+  background-color: #fff;
+}
+.point-item p {
+  font-size: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+.point-item p span:first-child {
+  width: 80%;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+.point-item p span:last-child {
+  width: 20%;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: 14px;
+  color: #999;
+}
+.filter-item {
+  margin-bottom: 10px;
 }
 </style>
 
@@ -301,8 +399,19 @@ export default {
           label: "已开发"
         }
       ],
+      publiclist: [
+        {
+          value: "0",
+          label: "对公"
+        },
+        {
+          value: "1",
+          label: "零售"
+        }
+      ],
       branchlist: [],
       BUG_ID: "",
+      IsPublic: null,
       pageIndex: 1,
       pageSize: 100,
       is_all: 1,
@@ -314,7 +423,25 @@ export default {
       lng: null,
       USER_NAME: "",
       imgList: [],
-      poiname: "输入查询地点"
+      poiname: "输入查询地点",
+      uploadImg: [],
+      historyList: [],
+      categoryVisible: false, //选择分类,
+      bug_id: "",
+      begin_date: "",
+      end_date: "",
+      ispublic: "",
+      name: "",
+
+      CEName: "",
+      Expand: "",
+      EndExpand: "",
+      filter: false, //筛选
+      time: "",
+      checkList: [],
+      isIndeterminate: true,
+      checkAll: false,
+      pointList: []
     };
   },
   mounted() {
@@ -323,7 +450,6 @@ export default {
       this.$router.replace({ path: "/" });
     } else {
       if (localStorage.getItem("lat")) {
-        console.log(localStorage.getItem("lat"), "-=-=-=-");
         this.lat = localStorage.getItem("lat");
         this.lng = localStorage.getItem("lng");
         this.poiname = localStorage.getItem("poiname");
@@ -334,10 +460,10 @@ export default {
       this.getBranch();
       this.init();
       this.getImg();
+      this.getPoint();
     }
   },
   destroyed() {
-    console.log(333333333333);
     localStorage.removeItem("lat");
     localStorage.removeItem("lng");
     localStorage.removeItem("poiname");
@@ -408,6 +534,17 @@ export default {
       });
     },
 
+    // 全选
+    handleCheckAllChange(val) {
+      console.log(val);
+      let temp = [];
+      this.branchlist.forEach(item => {
+        temp.push(item.USERGROUP_NAME);
+      });
+      this.checkList = val ? temp : [];
+      this.isIndeterminate = false;
+    },
+
     goWhere(path) {
       this.$router.push({ path: path });
     },
@@ -426,7 +563,7 @@ export default {
           type: "warning"
         });
       } else {
-        this.dialogFormVisible = true;
+        this.categoryVisible = true;
         let geocoder = new qq.maps.Geocoder();
         var latLng = new qq.maps.LatLng(this.lat, this.lng);
         //对指定经纬度进行解析
@@ -442,62 +579,106 @@ export default {
 
     // 提交新增标记
     submitTap() {
-      const data = {
+      let data = {
         action: "add_sign_index",
         _key: this._key,
         Sign_Name: this.Sign_Name,
-        Remark: this.Remark,
+        Remark: encodeURI(this.Remark),
         Longitude: this.lng,
         Latitude: this.lat,
         State: this.State,
         user_id: this.userInfo.USER_ID,
-        BUG_ID: this.BUG_ID,
+        BUG_ID: this.userInfo.USERGROUP_ID,
         Province: this.Province,
         City: this.City,
         District: this.District,
         Street: this.Street,
-        Img: this.Img
+        Img: "",
+        IsPublic: this.IsPublic,
+        CEName: this.CEName
       };
-      if (this.Sign_Name == null) {
-        this.$message({
-          message: "请填写标记名称",
-          type: "warning"
-        });
-      } else if (this.State == "") {
-        this.$message({
-          message: "请选择开发状态",
-          type: "warning"
-        });
-      } else if (this.BUG_ID == "") {
-        this.$message({
-          message: "请选择分行信息",
-          type: "warning"
-        });
-      } else {
-        publicApi
-          .publicApi("/ajax/Com_PCInfo.ashx", data)
-          .then(res => {
-            console.log(res, "llll");
-            if (res.code == "success") {
-              this.$message({
-                type: "success",
-                message: "添加成功!"
-              });
-              this.getPoint();
-              this.dialogFormVisible = false;
-            }
-          })
-          .catch(err => {
-            this.$message({
-              message: "服务器出现错误",
-              type: "warning"
-            });
+      if (this.IsPublic == 1) {
+        data.Expand = this.Expand;
+        data.EndExpand = this.EndExpand;
+        if (this.Sign_Name == null) {
+          this.$message({
+            message: "请填写标记名称",
+            type: "warning"
           });
+        } else if (this.CEName == "") {
+          this.$message({
+            message: "请输入企事业单位名称",
+            type: "warning"
+          });
+        } else if (this.Expand == "") {
+          this.$message({
+            message: "请输入拓展人数",
+            type: "warning"
+          });
+        } else if (this.EndExpand == "") {
+          this.$message({
+            message: "请输入已拓展人数",
+            type: "warning"
+          });
+        } else {
+          publicApi
+            .publicApi("/ajax/Com_PCInfo.ashx", data)
+            .then(res => {
+              console.log(res, "llll");
+              if (res.code == "success") {
+                this.$message({
+                  type: "success",
+                  message: "添加成功!"
+                });
+                this.getPoint();
+                this.dialogFormVisible = false;
+                this.categoryVisible = false;
+              }
+            })
+            .catch(err => {
+              this.$message({
+                message: "服务器出现错误",
+                type: "warning"
+              });
+            });
+        }
+      } else {
+        if (this.Sign_Name == null) {
+          this.$message({
+            message: "请填写标记名称",
+            type: "warning"
+          });
+        } else if (this.CEName == "") {
+          this.$message({
+            message: "请输入企事业单位名称",
+            type: "warning"
+          });
+        } else {
+          publicApi
+            .publicApi("/ajax/Com_PCInfo.ashx", data)
+            .then(res => {
+              console.log(res, "llll");
+              if (res.code == "success") {
+                this.$message({
+                  type: "success",
+                  message: "添加成功!"
+                });
+                this.getPoint();
+                this.dialogFormVisible = false;
+                this.categoryVisible = false;
+              }
+            })
+            .catch(err => {
+              this.$message({
+                message: "服务器出现错误",
+                type: "warning"
+              });
+            });
+        }
       }
     },
 
     handleCommand(command) {
-      // this.$message('click on item ' + command);
       if (command == "d") {
         this.$confirm("退出前请及时保存您的数据", "提示", {
           confirmButtonText: "确定",
@@ -527,7 +708,9 @@ export default {
     // 获取分行信息
     getBranch() {
       let data = {
-        action: "get_user_group_index"
+        action: "get_user_group_index",
+        user_id: this.userInfo.USER_ID,
+        bug_id: this.userInfo.USERGROUP_ID
       };
       publicApi.publicApi(`/ajax/Com_PCInfo.ashx`, data).then(res => {
         this.branchlist = res.data;
@@ -537,57 +720,107 @@ export default {
     // 获取所有标记
     getPoint() {
       this.showPoint = true;
-      let { map, markerList } = this;
+      let {
+        map,
+        markerList,
+        bug_id,
+        begin_date,
+        end_date,
+        ispublic,
+        name
+      } = this;
       let that = this;
       let data = {
         action: "get_sign_index",
         pageIndex: this.pageIndex,
         pageSize: this.pageSize,
         is_all: this.is_all,
-        user_id: this.userInfo.USER_ID
+        user_id: this.userInfo.USER_ID,
+        bug_id,
+        begin_date,
+        end_date,
+        ispublic,
+        name
       };
 
       publicApi.publicApi(`/ajax/Com_PCInfo.ashx`, data).then(res => {
         console.log(res, "所有标记");
-        this.pointList = res.data;
-        let pointList = res.data;
+        if (res.code == "error") {
+          this.deleteOverlays();
+        } else {
+          let nameList = [];
+          res.data.forEach(item => {
+            item.REMARK = decodeURI(item.REMARK);
+            nameList.push(item.SIGN_NAME);
+          });
+          this.nameList = nameList;
+          this.pointList = res.data;
+          let pointList = res.data;
+          if (pointList.length >= 5) {
+            this.historyList = pointList.slice(0, 4);
+          } else {
+            this.historyList = pointList;
+          }
 
-        var info = new qq.maps.InfoWindow({
-          map: map
-        });
+          var info = new qq.maps.InfoWindow({
+            map: map
+          });
 
-        if (pointList) {
-          for (let i = 0; i < pointList.length; i++) {
-            let position = new qq.maps.LatLng(
-              pointList[i].LATITUDE,
-              pointList[i].LONGITUDE
-            );
-            let marker = new qq.maps.Marker({
-              position: position,
-              map: map
-            });
-            let style = {
-              color: "#006ab8",
-              fontSize: "14px",
-              fontWeight: "bold",
-              background: "#fff",
-              padding: "5px 10px",
-              borderRadius: "5px"
-            };
-            let textmarker = new qq.maps.Label({
-              position: position,
-              map: map,
-              content: pointList[i].SIGN_NAME,
-              style: style
-            });
-            this.markerList.push(marker);
-            this.textmarkerList.push(textmarker);
-            marker.SIGN_NAME = pointList[i].SIGN_NAME;
-            marker.SIGN_ID = pointList[i].SIGN_ID;
+          if (pointList) {
+            for (let i = 0; i < pointList.length; i++) {
+              let position = new qq.maps.LatLng(
+                pointList[i].LATITUDE,
+                pointList[i].LONGITUDE
+              );
+              let marker = new qq.maps.Marker({
+                position: position,
+                map: map
+              });
+              let style = {
+                color: "#006ab8",
+                fontSize: "14px",
+                fontWeight: "bold",
+                background: "#fff",
+                padding: "5px 10px",
+                borderRadius: "5px"
+              };
+              let textmarker = new qq.maps.Label({
+                position: position,
+                map: map,
+                content: pointList[i].SIGN_NAME,
+                style: style
+              });
+              this.markerList.push(marker);
+              this.textmarkerList.push(textmarker);
+              marker.SIGN_NAME = pointList[i].SIGN_NAME;
+              marker.SIGN_ID = pointList[i].SIGN_ID;
 
-            qq.maps.event.addListener(marker, "click", function() {
-              that.goWhere(`/point?_key=${this.SIGN_ID}`);
-            });
+              var anchor = new qq.maps.Point(0, 39),
+                size = new qq.maps.Size(64, 64),
+                origin = new qq.maps.Point(0, 0);
+              let iconPer = new qq.maps.MarkerImage(
+                "/static/images/location-per.png",
+                size,
+                origin,
+                anchor
+              );
+              let iconPub = new qq.maps.MarkerImage(
+                "/static/images/location-pub.png",
+                size,
+                origin,
+                anchor
+              );
+
+              if (pointList[i].ISPUBLIC == "0") {
+                marker.setIcon(iconPub);
+              } else {
+                marker.setIcon(iconPer);
+              }
+
+              qq.maps.event.addListener(marker, "click", function() {
+                that.goWhere(`/point?_key=${this.SIGN_ID}`);
+              });
+            }
           }
         }
       });
@@ -603,16 +836,21 @@ export default {
         user_id: this.userInfo.USER_ID
       };
       let { imgList, Config } = this;
-      console.log(Config, "-------");
 
       publicApi.publicApi(`/ajax/Com_PCInfo.ashx`, data).then(res => {
         if (res.code == "success") {
           if (res.data.length != 0) {
             res.data.forEach(item => {
-              imgList.push(`${Config.server}${item.IMG}`);
+              if (item.IMG.indexOf(",") != -1) {
+                let temp = item.IMG.split(",");
+                temp.forEach(item => {
+                  imgList.push(`${Config.server}${item}`);
+                });
+              } else {
+                imgList.push(`${Config.server}${item.IMG}`);
+              }
             });
             this.imgList = imgList;
-            console.log(this.imgList);
           }
         }
       });
@@ -635,6 +873,7 @@ export default {
     // 选择图片
     changeImage(e) {
       console.log(e);
+      let { uploadImg } = this;
       let file = e.target.files[0];
       if (file) {
         this.file = file;
@@ -645,10 +884,43 @@ export default {
         reader.onload = function(e) {
           // 这里的this 指向reader
           console.log(e);
-          that.avatar = this.result;
           that.Img = this.result;
+          uploadImg.push(this.result);
+          that.uploadImg = uploadImg;
         };
       }
+    },
+
+    crtTimeFtt(val, row) {
+      if (val != null) {
+        var date = new Date(val);
+        return (
+          date.getFullYear() +
+          "-" +
+          (date.getMonth() + 1) +
+          "-" +
+          date.getDate()
+        );
+      }
+    },
+
+    filterTap() {
+      let { branchlist, checkList, begin_date, end_date, name } = this;
+      let tempList = [];
+      branchlist.forEach(o => {
+        if (checkList.indexOf(o.USERGROUP_NAME) != -1) {
+          tempList.push(o.USERGROUP_ID);
+        }
+      });
+      this.bug_id = tempList.join(",");
+      if (this.time != "") {
+        this.begin_date = this.crtTimeFtt(this.time[0]);
+        this.end_date = this.crtTimeFtt(this.time[1]);
+      }
+      console.log(this.begin_date);
+      this.getPoint();
+      this.filter = false;
+      // this.init()
     }
   }
 };
