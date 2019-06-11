@@ -28,7 +28,7 @@
         <el-table-column prop="REMARK" label="活动备注"></el-table-column>
         <el-table-column prop="URL" label="URL链接"></el-table-column>
         <el-table-column prop="BEGIN_DATE" label="开始时间"></el-table-column>
-        <el-table-column prop="END_DATE" label="结束时间"></el-table-column>
+        <!-- <el-table-column prop="END_DATE" label="结束时间"></el-table-column> -->
         <!-- <el-table-column label="图片">
           <template slot-scope="scope">
             <img v-for="(item,inde) in scope.row.imgList" :src="item" alt>
@@ -64,13 +64,7 @@
           <el-input v-model="Url" placeholder="请输入链接"/>
         </div>
         <div class="input-item">
-          <el-date-picker
-            v-model="time"
-            type="daterange"
-            range-separator="-"
-            start-placeholder="开始日期"
-            end-placeholder="结束日期"
-          ></el-date-picker>
+          <el-date-picker v-model="Begin_Date" type="date" placeholder="选择活动开始时间"></el-date-picker>
         </div>
         <div class="input-item">
           <input
@@ -192,7 +186,7 @@ export default {
         }
       ],
       Img: "",
-      time: "",
+      // Begin_Date: "",
       activityList: [],
       uploadImg: [],
       Url: "",
@@ -263,7 +257,7 @@ export default {
 
     // 提交活动
     submitTap(id) {
-      console.log(this.tableData);
+      // console.log(this.crtTimeFtt(this.Begin_Date));
       let img = null;
       if (this.uploadImg.length > 0) {
         img = this.uploadImg.join("|");
@@ -272,13 +266,13 @@ export default {
       } else {
         img = this.uploadImg;
       }
-      let { Activity_Name, Remark, time, State, Url } = this;
+      let { Activity_Name, Remark, Begin_Date, State, Url } = this;
       if (Activity_Name == null) {
         this.$message({
           message: "请填写活动名称",
           type: "warning"
         });
-      } else if (time == "") {
+      } else if (Begin_Date == null) {
         this.$message({
           message: "请选择时间",
           type: "warning"
@@ -289,8 +283,7 @@ export default {
           _key: "",
           Activity_Name: Activity_Name,
           Remark: encodeURI(Remark),
-          Begin_Date: this.crtTimeFtt(time[0]),
-          End_Date: this.crtTimeFtt(time[1]),
+          Begin_Date: this.crtTimeFtt(Begin_Date),
           State: State,
           Img: img,
           user_id: this.userInfo.USER_ID,
@@ -298,11 +291,11 @@ export default {
           Url: Url
         };
         if (id) {
-          console.log("iu该")
+          console.log("iu该");
           this.editActivity = true;
           data._key = this._key;
         } else {
-          console.log("正常添加")
+          console.log("正常添加");
           this.editActivity = false;
         }
         console.log(data);

@@ -143,6 +143,7 @@
         <el-select v-model="ispublic" placeholder="请选择活动区域">
           <el-option label="公司业务部" value="0"></el-option>
           <el-option label="零售业务部" value="1"></el-option>
+          <el-option label="公司业务部和零售业务部" value></el-option>
         </el-select>
       </div>
       <div class="filter-item">
@@ -175,7 +176,7 @@
         </el-checkbox-group>
       </div>
       <div slot="footer" class="dialog-footer">
-        <el-button @click="dialogFormVisible = false">取 消</el-button>
+        <el-button @click="filter = false">取 消</el-button>
         <el-button type="primary" @click="filterTap">确 定</el-button>
       </div>
     </el-dialog>
@@ -414,7 +415,7 @@ export default {
       IsPublic: null,
       pageIndex: 1,
       pageSize: 100,
-      is_all: 1,
+      is_all: 0,
       _key: "",
       Province: "",
       City: "",
@@ -460,7 +461,6 @@ export default {
       this.USER_NAME = userInfo.USER_NAME;
       this.getBranch();
       this.init();
-      this.getImg();
       this.getPoint();
       this.getName();
     }
@@ -866,36 +866,6 @@ export default {
       });
     },
 
-    // 获取图片
-    getImg() {
-      let data = {
-        action: "get_sign_index",
-        pageIndex: this.pageIndex,
-        pageSize: this.pageSize,
-        is_all: this.is_all,
-        user_id: this.userInfo.USER_ID
-      };
-      let { imgList, Config } = this;
-
-      publicApi.publicApi(`/ajax/Com_PCInfo.ashx`, data).then(res => {
-        if (res.code == "success") {
-          if (res.data.length != 0) {
-            res.data.forEach(item => {
-              if (item.IMG.indexOf(",") != -1) {
-                let temp = item.IMG.split(",");
-                temp.forEach(item => {
-                  imgList.push(`${Config.server}${item}`);
-                });
-              } else {
-                imgList.push(`${Config.server}${item.IMG}`);
-              }
-            });
-            this.imgList = imgList;
-          }
-        }
-      });
-    },
-
     // 隐藏标记
     deleteOverlays() {
       this.showPoint = false;
@@ -950,6 +920,7 @@ export default {
       if (name == "不筛选标记名") {
         this.name = "";
       }
+      this.is_all = 1;
       let tempList = [];
       branchlist.forEach(o => {
         if (checkList.indexOf(o.USERGROUP_NAME) != -1) {

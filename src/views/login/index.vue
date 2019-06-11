@@ -8,13 +8,13 @@
       label-position="left"
     >
       <div class="title-container">
-        <h3 class="title">江苏银行员工系统</h3>
-        <lang-select class="set-language" />
+        <h3 class="title">三公里营销系统</h3>
+        <lang-select class="set-language"/>
       </div>
 
       <el-form-item prop="`1`">
         <span class="svg-container">
-          <svg-icon icon-class="user" />
+          <svg-icon icon-class="user"/>
         </span>
         <el-input
           ref="username"
@@ -28,7 +28,7 @@
 
       <el-form-item prop="password">
         <span class="svg-container">
-          <svg-icon icon-class="password" />
+          <svg-icon icon-class="password"/>
         </span>
         <el-input
           :key="passwordType"
@@ -41,7 +41,7 @@
           @keyup.enter.native="handleLogin"
         />
         <span class="show-pwd" @click="showPwd">
-          <svg-icon :icon-class="passwordType === 'password' ? 'eye' : 'eye-open'" />
+          <svg-icon :icon-class="passwordType === 'password' ? 'eye' : 'eye-open'"/>
         </span>
       </el-form-item>
 
@@ -65,7 +65,7 @@
         <el-button class="thirdparty-button" type="primary" @click="showDialog=true">
           {{ $t('login.thirdparty') }}
         </el-button>
-      </div> -->
+      </div>-->
     </el-form>
 
     <el-dialog :title="$t('login.thirdparty')" :visible.sync="showDialog">
@@ -73,40 +73,40 @@
       <br>
       <br>
       <br>
-      <social-sign />
+      <social-sign/>
     </el-dialog>
   </div>
 </template>
 
 <script>
 // import { validUsername } from "@/utils/validate";
-import LangSelect from '@/components/LangSelect'
-import SocialSign from './socialSignin'
-import * as publicApi from '../../api/public'
+import LangSelect from "@/components/LangSelect";
+import SocialSign from "./socialSignin";
+import * as publicApi from "../../api/public";
 
 export default {
-  name: 'Login',
+  name: "Login",
   components: { LangSelect, SocialSign },
   data() {
     return {
       loginForm: {
-        name: '',
-        pwd: ''
+        name: "",
+        pwd: ""
       },
-      passwordType: 'password',
+      passwordType: "password",
       loading: false,
       showDialog: false,
       redirect: undefined
-    }
+    };
   },
   created() {
     // window.addEventListener('storage', this.afterQRScan)
   },
   mounted() {
-    if (this.loginForm.username === '') {
-      this.$refs.username.focus()
-    } else if (this.loginForm.password === '') {
-      this.$refs.password.focus()
+    if (this.loginForm.username === "") {
+      this.$refs.username.focus();
+    } else if (this.loginForm.password === "") {
+      this.$refs.password.focus();
     }
   },
   destroyed() {
@@ -114,73 +114,73 @@ export default {
   },
   methods: {
     showPwd() {
-      if (this.passwordType === 'password') {
-        this.passwordType = ''
+      if (this.passwordType === "password") {
+        this.passwordType = "";
       } else {
-        this.passwordType = 'password'
+        this.passwordType = "password";
       }
       this.$nextTick(() => {
-        this.$refs.password.focus()
-      })
+        this.$refs.password.focus();
+      });
     },
 
     // 获取code
-    getCode() {
+    getCode(name) {
       const data = {
-        action: 'md_info',
-        name: 'system'
-      }
-      return publicApi.publicApi('/ajax/Com_PCInfo.ashx', data)
+        action: "md_info",
+        name: name
+      };
+      return publicApi.publicApi("/ajax/Com_PCInfo.ashx", data);
     },
 
     // 登录
     signIn(name, pwd, code) {
       const data = {
-        action: 'get_user_info',
+        action: "get_user_info",
         name: name,
         pwd: pwd,
         code: code
-      }
-      return publicApi.publicApi('/ajax/Com_PCInfo.ashx', data)
+      };
+      return publicApi.publicApi("/ajax/Com_PCInfo.ashx", data);
     },
 
     handleLogin() {
-      const { name, pwd } = this.loginForm
-      if (name == '') {
+      const { name, pwd } = this.loginForm;
+      if (name == "") {
         this.$message({
-          message: '请填写用户名',
-          type: 'warning'
-        })
-      } else if (pwd == '') {
+          message: "请填写用户名",
+          type: "warning"
+        });
+      } else if (pwd == "") {
         this.$message({
-          message: '请填写密码',
-          type: 'warning'
-        })
+          message: "请填写密码",
+          type: "warning"
+        });
       } else {
-        this.getCode()
+        this.getCode(name)
           .then(res => {
-            if (res.code == 'success') {
+            if (res.code == "success") {
               this.signIn(name, pwd, res.data).then(res => {
-                console.log(res, 'login')
-                if (res.code == 'success') {
+                console.log(res, "login");
+                if (res.code == "success") {
                   this.$message({
-                    message: '登录成功',
-                    type: 'success'
-                  })
-                  localStorage.setItem('userinfo', JSON.stringify(res.data))
-                  console.log(this.$router)
-                  this.$router.replace({ path: '/index' })
+                    message: "登录成功",
+                    type: "success"
+                  });
+                  localStorage.setItem("userinfo", JSON.stringify(res.data));
+                  console.log(this.$router);
+                  this.$router.replace({ path: "/index" });
                 }
-              })
+              });
             }
           })
           .catch(err => {
-            alert(err)
+            alert(err);
             this.$message({
               message: err,
-              type: 'warning'
-            })
-          })
+              type: "warning"
+            });
+          });
       }
 
       // console.log(this.$router)
@@ -203,7 +203,7 @@ export default {
       // })
     }
   }
-}
+};
 </script>
 
 <style lang="scss">
