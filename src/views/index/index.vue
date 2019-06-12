@@ -415,7 +415,7 @@ export default {
       IsPublic: null,
       pageIndex: 1,
       pageSize: 100,
-      is_all: 0,
+      is_all: 1,
       _key: "",
       Province: "",
       City: "",
