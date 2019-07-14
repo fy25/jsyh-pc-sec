@@ -433,7 +433,6 @@ export default {
       end_date: "",
       ispublic: "",
       name: "",
-
       CEName: "",
       Expand: "",
       EndExpand: "",
@@ -486,7 +485,7 @@ export default {
       });
       this.map = map;
       if (this.lat != null) {
-        let anchor = new qq.maps.Point(0, 39),
+        let anchor = new qq.maps.Point(25, 25),
           size = new qq.maps.Size(42, 68),
           origin = new qq.maps.Point(0, 0),
           icon = new qq.maps.MarkerImage(
@@ -505,7 +504,7 @@ export default {
       }
       qq.maps.event.addListener(map, "click", function(event) {
         that.showPoint = false;
-        var anchor = new qq.maps.Point(0, 39),
+        var anchor = new qq.maps.Point(25, 25),
           size = new qq.maps.Size(42, 68),
           origin = new qq.maps.Point(0, 0),
           icon = new qq.maps.MarkerImage(

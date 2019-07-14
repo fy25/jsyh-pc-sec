@@ -23,6 +23,7 @@
         border
         style="width: 100%;margin-top:50px"
         :row-class-name="tableRowClassName"
+        v-if="ISPUBLIC=='1'"
       >
         <el-table-column prop="ACTIVITY_NAME" label="活动名称"></el-table-column>
         <el-table-column prop="REMARK" label="活动备注"></el-table-column>
@@ -44,7 +45,7 @@
     </el-main>
     <el-footer>
       <el-row>
-        <el-button type="primary" @click.native="openActivity">添加活动</el-button>
+        <el-button type="primary" @click.native="openActivity" v-if="ISPUBLIC=='1'">添加活动</el-button>
       </el-row>
     </el-footer>
     <el-dialog title="添加活动" :visible.sync="dialogFormVisible" center>
