@@ -10,10 +10,19 @@
         <el-table-column prop="CENAME" label="社区/企事业单位名称"></el-table-column>
         <el-table-column prop="EXPAND" label="该社区/企事业单位总人数" v-if="ISPUBLIC=='1'"></el-table-column>
         <el-table-column prop="ENDEXPAND" label="该社区/企事业单位已拓展人数" v-if="ISPUBLIC=='1'"></el-table-column>
+        <el-table-column prop="ACT_COUNT" label="总活动数量" v-if="ISPUBLIC=='1'"></el-table-column>
+        <el-table-column prop="ACT_COUNT_BY" label="本月活动数量" v-if="ISPUBLIC=='1'"></el-table-column>
+        <el-table-column prop="ACT_COUNT_BZ" label="本周活动数量" v-if="ISPUBLIC=='1'"></el-table-column>
+        <el-table-column prop="ACT_COUNT_SY" label="上月活动数量" v-if="ISPUBLIC=='1'"></el-table-column>
+        <el-table-column prop="ACT_COUNT_SZ" label="上周活动数量" v-if="ISPUBLIC=='1'"></el-table-column>
         <el-table-column label="操作">
           <template slot-scope="scope">
-            <el-button size="mini" type="primary" @click="openPoint">编辑标记</el-button>
-            <el-button size="mini" type="danger" @click.native="deletePoint">删除标记</el-button>
+            <div class="btngroup">
+              <el-button size="mini" type="primary" @click="openPoint">编辑标记</el-button>
+            </div>
+            <div>
+              <el-button size="mini" type="danger" @click.native="deletePoint">删除标记</el-button>
+            </div>
           </template>
         </el-table-column>
       </el-table>
@@ -51,7 +60,7 @@
     <el-dialog title="添加活动" :visible.sync="dialogFormVisible" center>
       <div class="activity">
         <div class="input-item">
-          <el-input v-model="Activity_Name" placeholder="请输入标题"/>
+          <el-input v-model="Activity_Name" placeholder="请输入标题" />
         </div>
         <div class="input-item">
           <el-input
@@ -62,7 +71,7 @@
           />
         </div>
         <div class="input-item">
-          <el-input v-model="Url" placeholder="请输入链接"/>
+          <el-input v-model="Url" placeholder="请输入链接" />
         </div>
         <div class="input-item">
           <el-date-picker v-model="Begin_Date" type="date" placeholder="选择活动开始时间"></el-date-picker>
@@ -72,9 +81,9 @@
             type="file"
             @change="changeImage($event)"
             accept="image/gif, image/jpeg, image/jpg, image/png"
-          >
+          />
           <div class="img-list">
-            <img v-for="item in uploadImg" :src="item" alt>
+            <img v-for="item in uploadImg" :src="item" alt />
           </div>
         </div>
         <div class="btn-group">
@@ -88,22 +97,26 @@
     <el-dialog title="修改标记" :visible.sync="pointDialog" center>
       <div class="activity">
         <div class="input-item">
-          <el-input v-model="SIGN_NAME" :value="SIGN_NAME" placeholder="请输入标题"/>
+          <el-input v-model="SIGN_NAME" :value="SIGN_NAME" placeholder="请输入标题" />
         </div>
         <div class="input-item">
-          <el-input v-model="CENAME" :value="CENAME" placeholder="请输入企事业单位名称"/>
+          <el-input v-model="CENAME" :value="CENAME" placeholder="请输入企事业单位名称" />
         </div>
         <div class="input-item" v-if="IsPublic!=0">
-          <el-input v-model="EXPAND" :value="EXPAND" placeholder="请输入拓展人数"/>
+          <el-input v-model="EXPAND" :value="EXPAND" placeholder="请输入拓展人数" />
         </div>
         <div class="input-item" v-if="IsPublic!=0">
-          <el-input v-model="ENDEXPAND" :value="ENDEXPAND" placeholder="请输入已拓展人数"/>
+          <el-input v-model="ENDEXPAND" :value="ENDEXPAND" placeholder="请输入已拓展人数" />
         </div>
         <div class="btn-group">
           <button @click="editTap">修改</button>
         </div>
       </div>
     </el-dialog>
+
+    <div class="goback">
+      <el-button type="info" @click="goBack">返回上一页</el-button>
+    </div>
   </el-container>
 </template>
 
@@ -114,6 +127,14 @@
 
 .el-table .success-row {
   background: #f0f9eb;
+}
+.btngroup {
+  padding: 10px 0;
+}
+.goback {
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 .activity {
   .input-item {
@@ -215,6 +236,8 @@ export default {
     let userInfo = JSON.parse(localStorage.getItem("userinfo"));
     this.userInfo = userInfo;
     this.sign_id = this.$route.query._key;
+    this._key = this.$route.query._key;
+    this.getBranch();
     this.getOne();
     this.getActivity();
   },
@@ -226,6 +249,10 @@ export default {
         return "success-row";
       }
       return "";
+    },
+
+    goBack() {
+      this.$router.go(-1);
     },
 
     // 打开活动弹窗
@@ -448,6 +475,8 @@ export default {
                 message: "删除成功!"
               });
               this.redirectTo("/index");
+            } else {
+              this.$message.error(res.message);
             }
           });
         })
@@ -604,6 +633,17 @@ export default {
             });
         }
       }
+    },
+    // 获取分行信息
+    getBranch() {
+      let data = {
+        action: "get_user_group_index",
+        user_id: this.userInfo.USER_ID,
+        bug_id: this.userInfo.USERGROUP_ID
+      };
+      publicApi.publicApi(`/ajax/Com_PCInfo.ashx`, data).then(res => {
+        this.branchlist = res.data;
+      });
     }
   }
 };

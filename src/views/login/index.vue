@@ -9,12 +9,12 @@
     >
       <div class="title-container">
         <h3 class="title">三公里营销系统</h3>
-        <lang-select class="set-language"/>
+        <lang-select class="set-language" />
       </div>
 
       <el-form-item prop="`1`">
         <span class="svg-container">
-          <svg-icon icon-class="user"/>
+          <svg-icon icon-class="user" />
         </span>
         <el-input
           ref="username"
@@ -28,7 +28,7 @@
 
       <el-form-item prop="password">
         <span class="svg-container">
-          <svg-icon icon-class="password"/>
+          <svg-icon icon-class="password" />
         </span>
         <el-input
           :key="passwordType"
@@ -41,7 +41,7 @@
           @keyup.enter.native="handleLogin"
         />
         <span class="show-pwd" @click="showPwd">
-          <svg-icon :icon-class="passwordType === 'password' ? 'eye' : 'eye-open'"/>
+          <svg-icon :icon-class="passwordType === 'password' ? 'eye' : 'eye-open'" />
         </span>
       </el-form-item>
 
@@ -70,10 +70,10 @@
 
     <el-dialog :title="$t('login.thirdparty')" :visible.sync="showDialog">
       {{ $t('login.thirdpartyTips') }}
-      <br>
-      <br>
-      <br>
-      <social-sign/>
+      <br />
+      <br />
+      <br />
+      <social-sign />
     </el-dialog>
   </div>
 </template>
@@ -83,6 +83,7 @@
 import LangSelect from "@/components/LangSelect";
 import SocialSign from "./socialSignin";
 import * as publicApi from "../../api/public";
+import { Config } from "../../config/config";
 
 export default {
   name: "Login",
@@ -96,7 +97,8 @@ export default {
       passwordType: "password",
       loading: false,
       showDialog: false,
-      redirect: undefined
+      redirect: undefined,
+      Config
     };
   },
   created() {
@@ -161,14 +163,25 @@ export default {
           .then(res => {
             if (res.code == "success") {
               this.signIn(name, pwd, res.data).then(res => {
-                console.log(res, "login");
                 if (res.code == "success") {
                   this.$message({
                     message: "登录成功",
                     type: "success"
                   });
+                  let ISPUBLIC = null;
+                  let { retailKey, adminKey } = this.Config;
+                  let userid = res.data.USER_ID;
+                  if (adminKey.indexOf(userid) != -1) {
+                    ISPUBLIC = "";
+                  } else {
+                    if (retailKey.indexOf(userid) != -1) {
+                      ISPUBLIC = "1";
+                    } else {
+                      ISPUBLIC = "0";
+                    }
+                  }
+                  res.data.ISPUBLIC = ISPUBLIC;
                   localStorage.setItem("userinfo", JSON.stringify(res.data));
-                  console.log(this.$router);
                   this.$router.replace({ path: "/index" });
                 }
               });
@@ -182,25 +195,6 @@ export default {
             });
           });
       }
-
-      // console.log(this.$router)
-      // this.$refs.loginForm.validate(valid => {
-      //   console.log(valid,"0000")
-      //   // if (valid) {
-      //   //   this.loading = true
-      //   //   this.$store.dispatch('user/login', this.loginForm)
-      //   //     .then(() => {
-      //   //       this.$router.push({ path: 'index' || '/' })
-      //   //       this.loading = false
-      //   //     })
-      //   //     .catch(() => {
-      //   //       this.loading = false
-      //   //     })
-      //   // } else {
-      //   //   console.log('error submit!!')
-      //   //   return false
-      //   // }
-      // })
     }
   }
 };
