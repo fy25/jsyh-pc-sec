@@ -34,9 +34,10 @@
                 </div>
                 <div class="history-point">
                   <div class="point-item" v-for="(item,index) in historyList" :key="index">
-                    <h3>{{item.SIGN_NAME}}</h3>
+                    <h4>标记名称: {{item.SIGN_NAME}}</h4>
+                    <h4>支行名称: {{item.BUG_NAME}}</h4>
                     <p>
-                      <span>{{item.CENAME}}</span>
+                      <span>社区/企事业单位名称: {{item.CENAME}}</span>
                       <span>{{item.CREATEDATE}}</span>
                     </p>
                   </div>

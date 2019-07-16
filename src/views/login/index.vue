@@ -171,10 +171,11 @@ export default {
                   let ISPUBLIC = null;
                   let { retailKey, adminKey } = this.Config;
                   let userid = res.data.USER_ID;
+                  let { USERGROUP_ID } = res.data;
                   if (adminKey.indexOf(userid) != -1) {
                     ISPUBLIC = "";
                   } else {
-                    if (retailKey.indexOf(userid) != -1) {
+                    if (retailKey.indexOf(USERGROUP_ID) != -1) {
                       ISPUBLIC = "1";
                     } else {
                       ISPUBLIC = "0";
