@@ -8,6 +8,7 @@
         <el-table-column prop="STATETEXT" label="标记类型"></el-table-column>
         <el-table-column prop="SIGN_NAME" label="标记名称"></el-table-column>
         <el-table-column prop="CENAME" label="社区/企事业单位名称"></el-table-column>
+        <el-table-column prop="BUG_NAME" label="分行名称"></el-table-column>
         <el-table-column prop="EXPAND" label="该社区/企事业单位总人数" v-if="ISPUBLIC=='1'"></el-table-column>
         <el-table-column prop="ENDEXPAND" label="该社区/企事业单位已拓展人数" v-if="ISPUBLIC=='1'"></el-table-column>
         <el-table-column prop="ACT_COUNT" label="总活动数量" v-if="ISPUBLIC=='1'"></el-table-column>
@@ -381,6 +382,7 @@ export default {
           this.tableData = tableData;
           this.BUG_ID = res.data.BUG_ID;
           this.CENAME = res.data.CENAME;
+          this.BUG_NAME = res.data.BUG_NAME;
           this.CITY = res.data.CITY;
           this.ENDEXPAND = res.data.ENDEXPAND;
           this.EXPAND = res.data.EXPAND;
