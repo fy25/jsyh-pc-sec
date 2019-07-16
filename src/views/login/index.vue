@@ -8,7 +8,7 @@
       label-position="left"
     >
       <div class="title-container">
-        <h3 class="title">江苏银行员工系统</h3>
+        <h3 class="title">三公里营销系统</h3>
         <lang-select class="set-language" />
       </div>
 
@@ -65,14 +65,14 @@
         <el-button class="thirdparty-button" type="primary" @click="showDialog=true">
           {{ $t('login.thirdparty') }}
         </el-button>
-      </div> -->
+      </div>-->
     </el-form>
 
     <el-dialog :title="$t('login.thirdparty')" :visible.sync="showDialog">
       {{ $t('login.thirdpartyTips') }}
-      <br>
-      <br>
-      <br>
+      <br />
+      <br />
+      <br />
       <social-sign />
     </el-dialog>
   </div>
@@ -80,33 +80,35 @@
 
 <script>
 // import { validUsername } from "@/utils/validate";
-import LangSelect from '@/components/LangSelect'
-import SocialSign from './socialSignin'
-import * as publicApi from '../../api/public'
+import LangSelect from "@/components/LangSelect";
+import SocialSign from "./socialSignin";
+import * as publicApi from "../../api/public";
+import { Config } from "../../config/config";
 
 export default {
-  name: 'Login',
+  name: "Login",
   components: { LangSelect, SocialSign },
   data() {
     return {
       loginForm: {
-        name: '',
-        pwd: ''
+        name: "",
+        pwd: ""
       },
-      passwordType: 'password',
+      passwordType: "password",
       loading: false,
       showDialog: false,
-      redirect: undefined
-    }
+      redirect: undefined,
+      Config
+    };
   },
   created() {
     // window.addEventListener('storage', this.afterQRScan)
   },
   mounted() {
-    if (this.loginForm.username === '') {
-      this.$refs.username.focus()
-    } else if (this.loginForm.password === '') {
-      this.$refs.password.focus()
+    if (this.loginForm.username === "") {
+      this.$refs.username.focus();
+    } else if (this.loginForm.password === "") {
+      this.$refs.password.focus();
     }
   },
   destroyed() {
@@ -114,96 +116,88 @@ export default {
   },
   methods: {
     showPwd() {
-      if (this.passwordType === 'password') {
-        this.passwordType = ''
+      if (this.passwordType === "password") {
+        this.passwordType = "";
       } else {
-        this.passwordType = 'password'
+        this.passwordType = "password";
       }
       this.$nextTick(() => {
-        this.$refs.password.focus()
-      })
+        this.$refs.password.focus();
+      });
     },
 
     // 获取code
-    getCode() {
+    getCode(name) {
       const data = {
-        action: 'md_info',
-        name: 'system'
-      }
-      return publicApi.publicApi('/ajax/Com_PCInfo.ashx', data)
+        action: "md_info",
+        name: name
+      };
+      return publicApi.publicApi("/ajax/Com_PCInfo.ashx", data);
     },
 
     // 登录
     signIn(name, pwd, code) {
       const data = {
-        action: 'get_user_info',
+        action: "get_user_info",
         name: name,
         pwd: pwd,
         code: code
-      }
-      return publicApi.publicApi('/ajax/Com_PCInfo.ashx', data)
+      };
+      return publicApi.publicApi("/ajax/Com_PCInfo.ashx", data);
     },
 
     handleLogin() {
-      const { name, pwd } = this.loginForm
-      if (name == '') {
+      const { name, pwd } = this.loginForm;
+      if (name == "") {
         this.$message({
-          message: '请填写用户名',
-          type: 'warning'
-        })
-      } else if (pwd == '') {
+          message: "请填写用户名",
+          type: "warning"
+        });
+      } else if (pwd == "") {
         this.$message({
-          message: '请填写密码',
-          type: 'warning'
-        })
+          message: "请填写密码",
+          type: "warning"
+        });
       } else {
-        this.getCode()
+        this.getCode(name)
           .then(res => {
-            if (res.code == 'success') {
+            if (res.code == "success") {
               this.signIn(name, pwd, res.data).then(res => {
-                console.log(res, 'login')
-                if (res.code == 'success') {
+                if (res.code == "success") {
                   this.$message({
-                    message: '登录成功',
-                    type: 'success'
-                  })
-                  localStorage.setItem('userinfo', JSON.stringify(res.data))
-                  console.log(this.$router)
-                  this.$router.replace({ path: '/index' })
+                    message: "登录成功",
+                    type: "success"
+                  });
+                  let ISPUBLIC = null;
+                  let { retailKey, adminKey } = this.Config;
+                  let userid = res.data.USER_ID;
+                  if (adminKey.indexOf(userid) != -1) {
+                    ISPUBLIC = "";
+                  } else {
+                    if (retailKey.indexOf(userid) != -1) {
+                      ISPUBLIC = "1";
+                    } else {
+                      ISPUBLIC = "0";
+                    }
+                  }
+                  res.data.ISPUBLIC = ISPUBLIC;
+                  localStorage.setItem("userinfo", JSON.stringify(res.data));
+                  this.$router.replace({ path: "/index" });
                 }
-              })
+              });
             }
           })
           .catch(err => {
-            alert(err)
+            alert(err);
             this.$message({
               message: err,
-              type: 'warning'
-            })
-          })
+              type: "warning"
+            });
+          });
       }
-
-      // console.log(this.$router)
-      // this.$refs.loginForm.validate(valid => {
-      //   console.log(valid,"0000")
-      //   // if (valid) {
-      //   //   this.loading = true
-      //   //   this.$store.dispatch('user/login', this.loginForm)
-      //   //     .then(() => {
-      //   //       this.$router.push({ path: 'index' || '/' })
-      //   //       this.loading = false
-      //   //     })
-      //   //     .catch(() => {
-      //   //       this.loading = false
-      //   //     })
-      //   // } else {
-      //   //   console.log('error submit!!')
-      //   //   return false
-      //   // }
-      // })
     }
   }
-}
+};
 </script>
 
 <style lang="scss">

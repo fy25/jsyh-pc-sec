@@ -5,15 +5,24 @@
     </el-header>
     <el-main>
       <el-table :data="tableData" border style="width: 100%" :row-class-name="tableRowClassName">
+        <el-table-column prop="STATETEXT" label="标记类型"></el-table-column>
         <el-table-column prop="SIGN_NAME" label="标记名称"></el-table-column>
         <el-table-column prop="CENAME" label="社区/企事业单位名称"></el-table-column>
         <el-table-column prop="EXPAND" label="该社区/企事业单位总人数" v-if="ISPUBLIC=='1'"></el-table-column>
         <el-table-column prop="ENDEXPAND" label="该社区/企事业单位已拓展人数" v-if="ISPUBLIC=='1'"></el-table-column>
-        <el-table-column prop="STATETEXT" label="标记类型"></el-table-column>
+        <el-table-column prop="ACT_COUNT" label="总活动数量" v-if="ISPUBLIC=='1'"></el-table-column>
+        <el-table-column prop="ACT_COUNT_BY" label="本月活动数量" v-if="ISPUBLIC=='1'"></el-table-column>
+        <el-table-column prop="ACT_COUNT_BZ" label="本周活动数量" v-if="ISPUBLIC=='1'"></el-table-column>
+        <el-table-column prop="ACT_COUNT_SY" label="上月活动数量" v-if="ISPUBLIC=='1'"></el-table-column>
+        <el-table-column prop="ACT_COUNT_SZ" label="上周活动数量" v-if="ISPUBLIC=='1'"></el-table-column>
         <el-table-column label="操作">
           <template slot-scope="scope">
-            <el-button size="mini" type="primary" @click="openPoint">编辑标记</el-button>
-            <el-button size="mini" type="danger" @click.native="deletePoint">删除标记</el-button>
+            <div class="btngroup">
+              <el-button size="mini" type="primary" @click="openPoint">编辑标记</el-button>
+            </div>
+            <div>
+              <el-button size="mini" type="danger" @click.native="deletePoint">删除标记</el-button>
+            </div>
           </template>
         </el-table-column>
       </el-table>
@@ -23,12 +32,13 @@
         border
         style="width: 100%;margin-top:50px"
         :row-class-name="tableRowClassName"
+        v-if="ISPUBLIC=='1'"
       >
         <el-table-column prop="ACTIVITY_NAME" label="活动名称"></el-table-column>
         <el-table-column prop="REMARK" label="活动备注"></el-table-column>
         <el-table-column prop="URL" label="URL链接"></el-table-column>
         <el-table-column prop="BEGIN_DATE" label="开始时间"></el-table-column>
-        <el-table-column prop="END_DATE" label="结束时间"></el-table-column>
+        <!-- <el-table-column prop="END_DATE" label="结束时间"></el-table-column> -->
         <!-- <el-table-column label="图片">
           <template slot-scope="scope">
             <img v-for="(item,inde) in scope.row.imgList" :src="item" alt>
@@ -44,13 +54,13 @@
     </el-main>
     <el-footer>
       <el-row>
-        <el-button type="primary" @click.native="openActivity">添加活动</el-button>
+        <el-button type="primary" @click.native="openActivity" v-if="ISPUBLIC=='1'">添加活动</el-button>
       </el-row>
     </el-footer>
     <el-dialog title="添加活动" :visible.sync="dialogFormVisible" center>
       <div class="activity">
         <div class="input-item">
-          <el-input v-model="Activity_Name" placeholder="请输入标题"/>
+          <el-input v-model="Activity_Name" placeholder="请输入标题" />
         </div>
         <div class="input-item">
           <el-input
@@ -61,30 +71,24 @@
           />
         </div>
         <div class="input-item">
-          <el-input v-model="Url" placeholder="请输入链接"/>
+          <el-input v-model="Url" placeholder="请输入链接" />
         </div>
         <div class="input-item">
-          <el-date-picker
-            v-model="time"
-            type="daterange"
-            range-separator="-"
-            start-placeholder="开始日期"
-            end-placeholder="结束日期"
-          ></el-date-picker>
+          <el-date-picker v-model="Begin_Date" type="date" placeholder="选择活动开始时间"></el-date-picker>
         </div>
         <div class="input-item">
           <input
             type="file"
             @change="changeImage($event)"
             accept="image/gif, image/jpeg, image/jpg, image/png"
-          >
+          />
           <div class="img-list">
-            <img v-for="item in uploadImg" :src="item" alt>
+            <img v-for="item in uploadImg" :src="item" alt />
           </div>
         </div>
         <div class="btn-group">
-          <button @click="submitTap" v-if="editActivity">修改</button>
-          <button @click="submitTap(this._key)" v-else>添加</button>
+          <button @click="submitTap(true)" v-if="editActivity">修改</button>
+          <button @click="submitTap(false)" v-else>添加</button>
         </div>
       </div>
     </el-dialog>
@@ -93,22 +97,26 @@
     <el-dialog title="修改标记" :visible.sync="pointDialog" center>
       <div class="activity">
         <div class="input-item">
-          <el-input v-model="SIGN_NAME" :value="SIGN_NAME" placeholder="请输入标题"/>
+          <el-input v-model="SIGN_NAME" :value="SIGN_NAME" placeholder="请输入标题" />
         </div>
         <div class="input-item">
-          <el-input v-model="CENAME" :value="CENAME" placeholder="请输入企事业单位名称"/>
+          <el-input v-model="CENAME" :value="CENAME" placeholder="请输入企事业单位名称" />
         </div>
         <div class="input-item" v-if="IsPublic!=0">
-          <el-input v-model="EXPAND" :value="EXPAND" placeholder="请输入拓展人数"/>
+          <el-input v-model="EXPAND" :value="EXPAND" placeholder="请输入拓展人数" />
         </div>
         <div class="input-item" v-if="IsPublic!=0">
-          <el-input v-model="ENDEXPAND" :value="ENDEXPAND" placeholder="请输入已拓展人数"/>
+          <el-input v-model="ENDEXPAND" :value="ENDEXPAND" placeholder="请输入已拓展人数" />
         </div>
         <div class="btn-group">
           <button @click="editTap">修改</button>
         </div>
       </div>
     </el-dialog>
+
+    <div class="goback">
+      <el-button type="info" @click="goBack">返回上一页</el-button>
+    </div>
   </el-container>
 </template>
 
@@ -119,6 +127,14 @@
 
 .el-table .success-row {
   background: #f0f9eb;
+}
+.btngroup {
+  padding: 10px 0;
+}
+.goback {
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 .activity {
   .input-item {
@@ -192,7 +208,7 @@ export default {
         }
       ],
       Img: "",
-      time: "",
+      // Begin_Date: "",
       activityList: [],
       uploadImg: [],
       Url: "",
@@ -203,6 +219,7 @@ export default {
       ENDEXPAND: "",
       EXPAND: "",
       IsPublic: "",
+      ISPUBLIC: "",
       LATITUDE: "",
       LONGITUDE: "",
       PROVINCE: "",
@@ -218,7 +235,9 @@ export default {
   mounted() {
     let userInfo = JSON.parse(localStorage.getItem("userinfo"));
     this.userInfo = userInfo;
+    this.sign_id = this.$route.query._key;
     this._key = this.$route.query._key;
+    this.getBranch();
     this.getOne();
     this.getActivity();
   },
@@ -230,6 +249,10 @@ export default {
         return "success-row";
       }
       return "";
+    },
+
+    goBack() {
+      this.$router.go(-1);
     },
 
     // 打开活动弹窗
@@ -262,6 +285,7 @@ export default {
 
     // 提交活动
     submitTap(id) {
+      // console.log(this.crtTimeFtt(this.Begin_Date));
       let img = null;
       if (this.uploadImg.length > 0) {
         img = this.uploadImg.join("|");
@@ -270,13 +294,13 @@ export default {
       } else {
         img = this.uploadImg;
       }
-      let { Activity_Name, Remark, time, State, Url } = this;
+      let { Activity_Name, Remark, Begin_Date, State, Url } = this;
       if (Activity_Name == null) {
         this.$message({
           message: "请填写活动名称",
           type: "warning"
         });
-      } else if (time == "") {
+      } else if (Begin_Date == null) {
         this.$message({
           message: "请选择时间",
           type: "warning"
@@ -287,8 +311,7 @@ export default {
           _key: "",
           Activity_Name: Activity_Name,
           Remark: encodeURI(Remark),
-          Begin_Date: this.crtTimeFtt(time[0]),
-          End_Date: this.crtTimeFtt(time[1]),
+          Begin_Date: this.crtTimeFtt(Begin_Date),
           State: State,
           Img: img,
           user_id: this.userInfo.USER_ID,
@@ -296,9 +319,11 @@ export default {
           Url: Url
         };
         if (id) {
+          console.log("iu该");
           this.editActivity = true;
           data._key = this._key;
         } else {
+          console.log("正常添加");
           this.editActivity = false;
         }
         console.log(data);
@@ -334,7 +359,7 @@ export default {
       this.tableData = [];
       let data = {
         action: "get_sign_object",
-        _key: this._key,
+        _key: this.sign_id,
         user_id: this.userInfo.USER_ID
       };
       let { tableData } = this;
@@ -381,7 +406,7 @@ export default {
         pageIndex: "1",
         pageSize: "10",
         is_all: "1",
-        sign_id: this._key,
+        sign_id: this.sign_id,
         user_id: this.userInfo.USER_ID
       };
       let { tableData } = this;
@@ -450,6 +475,8 @@ export default {
                 message: "删除成功!"
               });
               this.redirectTo("/index");
+            } else {
+              this.$message.error(res.message);
             }
           });
         })
@@ -606,6 +633,17 @@ export default {
             });
         }
       }
+    },
+    // 获取分行信息
+    getBranch() {
+      let data = {
+        action: "get_user_group_index",
+        user_id: this.userInfo.USER_ID,
+        bug_id: this.userInfo.USERGROUP_ID
+      };
+      publicApi.publicApi(`/ajax/Com_PCInfo.ashx`, data).then(res => {
+        this.branchlist = res.data;
+      });
     }
   }
 };

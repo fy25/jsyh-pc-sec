@@ -6,7 +6,7 @@
           <img
             src="http://www.jsbchina.cn/data/tosend/resource/upload/20170113/f89b6579-9a50-4281-9a08-93d867dc452a.png"
             alt
-          >
+          />
         </div>
         <div class="index-header-menu">
           <div class="search-input" @click="goWhere('/search')">{{poiname}}</div>
@@ -14,19 +14,16 @@
           <el-dropdown @command="handleCommand">
             <el-button type="primary">
               {{USER_NAME}}
-              <i class="el-icon-arrow-down el-icon--right"/>
+              <i class="el-icon-arrow-down el-icon--right" />
             </el-button>
             <el-dropdown-menu slot="dropdown">
-              <!-- <el-dropdown-item command="a">个人中心</el-dropdown-item> -->
-              <!-- <el-dropdown-item command="b">我的历史标记</el-dropdown-item> -->
-              <!-- <el-dropdown-item command="c">设置</el-dropdown-item> -->
               <el-dropdown-item command="d">退出</el-dropdown-item>
             </el-dropdown-menu>
           </el-dropdown>
         </div>
       </div>
       <div class="index-content">
-        <div id="container" class="map"/>
+        <div id="container" class="map" />
         <div class="index-info">
           <el-row :gutter="20">
             <el-col :span="12">
@@ -50,7 +47,7 @@
               <div class="btn-group">
                 <button @click="openDialog">添加标记</button>
                 <button @click="getPoint" v-if="!showPoint">查看历史标记</button>
-                <button @click="deleteOverlays" v-else>关闭历史标记</button>
+                <button @click="deleteText" v-else>关闭历史标记</button>
                 <!-- <button>查看活动</button> -->
               </div>
             </el-col>
@@ -71,55 +68,17 @@
           </el-select>
         </div>-->
         <div class="input-item">
-          <el-input v-model="Sign_Name" placeholder="请输入标题"/>
+          <el-input v-model="Sign_Name" placeholder="请输入标题" />
         </div>
         <div class="input-item">
-          <el-input v-model="CEName" placeholder="请输入企事业单位名称"/>
+          <el-input v-model="CEName" placeholder="请输入企事业单位名称" />
         </div>
-        <div class="input-item" v-if="IsPublic!=0">
-          <el-input v-model="Expand" placeholder="请输入拓展人数"/>
+        <div class="input-item" v-if="IsPublic=='1'">
+          <el-input v-model="Expand" placeholder="请输入拓展人数" />
         </div>
-        <div class="input-item" v-if="IsPublic!=0">
-          <el-input v-model="EndExpand" placeholder="请输入已拓展人数"/>
+        <div class="input-item" v-if="IsPublic  =='1'">
+          <el-input v-model="EndExpand" placeholder="请输入已拓展人数" />
         </div>
-        <!-- <div class="input-item">
-          <el-input
-            v-model="Remark"
-            type="textarea"
-            :autosize="{ minRows: 2, maxRows: 4}"
-            placeholder="请输入内容"
-          />
-        </div>
-        <div class="input-item">
-          <el-select v-model="BUG_ID" placeholder="请选择分行">
-            <el-option
-              v-for="item in branchlist"
-              :key="item.USERGROUP_ID"
-              :label="item.USERGROUP_NAME"
-              :value="item.USERGROUP_ID"
-            ></el-option>
-          </el-select>
-        </div>
-        <div class="input-item">
-          <el-select v-model="State" placeholder="请选择开发状态">
-            <el-option
-              v-for="item in statelist"
-              :key="item.value"
-              :label="item.label"
-              :value="item.value"
-            ></el-option>
-          </el-select>
-        </div>
-        <div class="input-item">
-          <input
-            type="file"
-            @change="changeImage($event)"
-            accept="image/gif, image/jpeg, image/jpg, image/png"
-          >
-          <div class="img-list">
-            <img v-for="item in uploadImg" :src="item" alt>
-          </div>
-        </div>-->
         <div class="btn-group">
           <button @click="submitTap">添加</button>
         </div>
@@ -128,8 +87,7 @@
 
     <el-dialog title="请选择标记类型" :visible.sync="categoryVisible" center>
       <el-select v-model="IsPublic" placeholder="请选择标记类型">
-        <el-option label="公司业务部" value="0"></el-option>
-        <el-option label="零售业务部" value="1"></el-option>
+        <el-option v-for="item in typeList" :label="item.label" :value="item.value"></el-option>
       </el-select>
       <div slot="footer" class="dialog-footer">
         <el-button @click="categoryVisible = false">取 消</el-button>
@@ -141,19 +99,11 @@
     <el-dialog title="筛选条件" :visible.sync="filter">
       <div class="filter-item">
         <el-select v-model="ispublic" placeholder="请选择活动区域">
-          <el-option label="公司业务部" value="0"></el-option>
-          <el-option label="零售业务部" value="1"></el-option>
+          <el-option v-for="item in filterList" :label="item.label" :value="item.value"></el-option>
         </el-select>
       </div>
       <div class="filter-item">
-        <el-select v-model="name" placeholder="请选择标记名称">
-          <el-option
-            v-for="(item,index ) in pointList"
-            :key="index"
-            :label="item.SIGN_NAME"
-            :value="item.SIGN_NAME"
-          ></el-option>
-        </el-select>
+        <el-input v-model="name" placeholder="请输入标记名称"></el-input>
       </div>
       <div class="filter-item">
         <el-date-picker
@@ -175,8 +125,9 @@
         </el-checkbox-group>
       </div>
       <div slot="footer" class="dialog-footer">
-        <el-button @click="dialogFormVisible = false">取 消</el-button>
+        <el-button @click="filter = false">取 消</el-button>
         <el-button type="primary" @click="filterTap">确 定</el-button>
+        <el-button type="warning" @click="clearFilterTap">还原筛选</el-button>
       </div>
     </el-dialog>
   </div>
@@ -432,7 +383,6 @@ export default {
       end_date: "",
       ispublic: "",
       name: "",
-
       CEName: "",
       Expand: "",
       EndExpand: "",
@@ -441,11 +391,15 @@ export default {
       checkList: [],
       isIndeterminate: true,
       checkAll: false,
-      pointList: []
+      pointList: [],
+      nameList: [],
+      typeList: [],
+      filterList: []
     };
   },
   mounted() {
     let userInfo = localStorage.getItem("userinfo");
+    let { typeList, filterList } = this;
     if (!userInfo) {
       this.$router.replace({ path: "/" });
     } else {
@@ -457,10 +411,65 @@ export default {
       userInfo = JSON.parse(userInfo);
       this.userInfo = userInfo;
       this.USER_NAME = userInfo.USER_NAME;
+      this.ispublic = userInfo.ISPUBLIC;
+      if (userInfo.ISPUBLIC == "") {
+        typeList = [
+          {
+            label: "公司业务部",
+            value: "0"
+          },
+          {
+            label: "零售业务部",
+            value: "1"
+          }
+        ];
+        filterList = [
+          {
+            label: "公司业务部",
+            value: "0"
+          },
+          {
+            label: "零售业务部",
+            value: "1"
+          },
+          {
+            label: "公司业务部和零售业务部",
+            value: " "
+          }
+        ];
+      } else if (userInfo.ISPUBLIC == "0") {
+        typeList = [
+          {
+            label: "公司业务部",
+            value: "0"
+          }
+        ];
+        filterList = [
+          {
+            label: "公司业务部",
+            value: "0"
+          }
+        ];
+      } else {
+        typeList = [
+          {
+            label: "零售业务部",
+            value: "1"
+          }
+        ];
+        filterList = [
+          {
+            label: "零售业务部",
+            value: "1"
+          }
+        ];
+      }
+      this.typeList = typeList;
+      this.filterList = filterList;
       this.getBranch();
       this.init();
-      this.getImg();
       this.getPoint();
+      this.getName();
     }
   },
   destroyed() {
@@ -484,7 +493,7 @@ export default {
       });
       this.map = map;
       if (this.lat != null) {
-        let anchor = new qq.maps.Point(0, 39),
+        let anchor = new qq.maps.Point(25, 25),
           size = new qq.maps.Size(42, 68),
           origin = new qq.maps.Point(0, 0),
           icon = new qq.maps.MarkerImage(
@@ -503,7 +512,7 @@ export default {
       }
       qq.maps.event.addListener(map, "click", function(event) {
         that.showPoint = false;
-        var anchor = new qq.maps.Point(0, 39),
+        var anchor = new qq.maps.Point(25, 25),
           size = new qq.maps.Size(42, 68),
           origin = new qq.maps.Point(0, 0),
           icon = new qq.maps.MarkerImage(
@@ -620,6 +629,11 @@ export default {
             message: "请输入已拓展人数",
             type: "warning"
           });
+        } else if (Number(this.Expand) < Number(this.EndExpand)) {
+          this.$message({
+            message: "已拓展人数需小于等于拓展人数",
+            type: "warning"
+          });
         } else {
           publicApi
             .publicApi("/ajax/Com_PCInfo.ashx", data)
@@ -720,15 +734,126 @@ export default {
     // 获取所有标记
     getPoint() {
       this.showPoint = true;
+      let { map, bug_id, begin_date, end_date, ispublic, name } = this;
+      let markerList = [];
+      let that = this;
+      let data = {
+        action: "get_sign_index",
+        pageIndex: this.pageIndex,
+        pageSize: this.pageSize,
+        is_all: this.is_all,
+        user_id: this.userInfo.USER_ID,
+        bug_id,
+        begin_date,
+        end_date,
+        ispublic,
+        name
+      };
+
+      publicApi
+        .publicApi(`/ajax/Com_PCInfo.ashx`, data)
+        .then(res => {
+          console.log(res, "所有标记");
+          if (res.code == "error") {
+            this.deleteOverlays();
+            this.$message({
+              message: res.message,
+              type: "warning"
+            });
+          } else {
+            res.data.forEach(item => {
+              item.REMARK = decodeURI(item.REMARK);
+            });
+            this.pointList = res.data;
+            let pointList = res.data;
+            if (pointList.length >= 5) {
+              this.historyList = pointList.slice(0, 4);
+            } else {
+              this.historyList = pointList;
+            }
+
+            var info = new qq.maps.InfoWindow({
+              map: map
+            });
+
+            if (pointList) {
+              for (let i = 0; i < pointList.length; i++) {
+                let position = new qq.maps.LatLng(
+                  pointList[i].LATITUDE,
+                  pointList[i].LONGITUDE
+                );
+                let marker = new qq.maps.Marker({
+                  position: position,
+                  map: map
+                });
+                let style = {
+                  color: "#006ab8",
+                  fontSize: "14px",
+                  fontWeight: "bold",
+                  background: "#fff",
+                  padding: "5px 10px",
+                  borderRadius: "5px"
+                };
+                let textmarker = new qq.maps.Label({
+                  position: position,
+                  map: map,
+                  content: pointList[i].SIGN_NAME,
+                  style: style
+                });
+                this.markerList.push(marker);
+                this.textmarkerList.push(textmarker);
+                marker.SIGN_NAME = pointList[i].SIGN_NAME;
+                marker.SIGN_ID = pointList[i].SIGN_ID;
+
+                var anchor = new qq.maps.Point(0, 39),
+                  size = new qq.maps.Size(64, 64),
+                  origin = new qq.maps.Point(0, 0);
+                let iconPer = new qq.maps.MarkerImage(
+                  "/static/images/location-per.png",
+                  size,
+                  origin,
+                  anchor
+                );
+                let iconPub = new qq.maps.MarkerImage(
+                  "/static/images/location-pub.png",
+                  size,
+                  origin,
+                  anchor
+                );
+
+                if (pointList[i].ISPUBLIC == "0") {
+                  marker.setIcon(iconPub);
+                } else {
+                  marker.setIcon(iconPer);
+                }
+
+                qq.maps.event.addListener(marker, "click", function() {
+                  that.goWhere(`/point?_key=${this.SIGN_ID}`);
+                });
+              }
+            }
+          }
+        })
+        .catch(err => {
+          this.$message({
+            message: err.message,
+            type: "warning"
+          });
+        });
+    },
+    // 获取所有标记名
+    getName() {
+      this.showPoint = true;
       let {
         map,
-        markerList,
+        // markerList,
         bug_id,
         begin_date,
         end_date,
         ispublic,
         name
       } = this;
+      let markerList = [];
       let that = this;
       let data = {
         action: "get_sign_index",
@@ -748,110 +873,11 @@ export default {
         if (res.code == "error") {
           this.deleteOverlays();
         } else {
-          let nameList = [];
-          res.data.forEach(item => {
-            item.REMARK = decodeURI(item.REMARK);
-            nameList.push(item.SIGN_NAME);
+          let list = res.data;
+          list.unshift({
+            SIGN_NAME: "不筛选标记名"
           });
-          this.nameList = nameList;
-          this.pointList = res.data;
-          let pointList = res.data;
-          if (pointList.length >= 5) {
-            this.historyList = pointList.slice(0, 4);
-          } else {
-            this.historyList = pointList;
-          }
-
-          var info = new qq.maps.InfoWindow({
-            map: map
-          });
-
-          if (pointList) {
-            for (let i = 0; i < pointList.length; i++) {
-              let position = new qq.maps.LatLng(
-                pointList[i].LATITUDE,
-                pointList[i].LONGITUDE
-              );
-              let marker = new qq.maps.Marker({
-                position: position,
-                map: map
-              });
-              let style = {
-                color: "#006ab8",
-                fontSize: "14px",
-                fontWeight: "bold",
-                background: "#fff",
-                padding: "5px 10px",
-                borderRadius: "5px"
-              };
-              let textmarker = new qq.maps.Label({
-                position: position,
-                map: map,
-                content: pointList[i].SIGN_NAME,
-                style: style
-              });
-              this.markerList.push(marker);
-              this.textmarkerList.push(textmarker);
-              marker.SIGN_NAME = pointList[i].SIGN_NAME;
-              marker.SIGN_ID = pointList[i].SIGN_ID;
-
-              var anchor = new qq.maps.Point(0, 39),
-                size = new qq.maps.Size(64, 64),
-                origin = new qq.maps.Point(0, 0);
-              let iconPer = new qq.maps.MarkerImage(
-                "/static/images/location-per.png",
-                size,
-                origin,
-                anchor
-              );
-              let iconPub = new qq.maps.MarkerImage(
-                "/static/images/location-pub.png",
-                size,
-                origin,
-                anchor
-              );
-
-              if (pointList[i].ISPUBLIC == "0") {
-                marker.setIcon(iconPub);
-              } else {
-                marker.setIcon(iconPer);
-              }
-
-              qq.maps.event.addListener(marker, "click", function() {
-                that.goWhere(`/point?_key=${this.SIGN_ID}`);
-              });
-            }
-          }
-        }
-      });
-    },
-
-    // 获取图片
-    getImg() {
-      let data = {
-        action: "get_sign_index",
-        pageIndex: this.pageIndex,
-        pageSize: this.pageSize,
-        is_all: this.is_all,
-        user_id: this.userInfo.USER_ID
-      };
-      let { imgList, Config } = this;
-
-      publicApi.publicApi(`/ajax/Com_PCInfo.ashx`, data).then(res => {
-        if (res.code == "success") {
-          if (res.data.length != 0) {
-            res.data.forEach(item => {
-              if (item.IMG.indexOf(",") != -1) {
-                let temp = item.IMG.split(",");
-                temp.forEach(item => {
-                  imgList.push(`${Config.server}${item}`);
-                });
-              } else {
-                imgList.push(`${Config.server}${item.IMG}`);
-              }
-            });
-            this.imgList = imgList;
-          }
+          this.nameList = res.data;
         }
       });
     },
@@ -866,6 +892,17 @@ export default {
           textmarkerList[i].setMap(null);
         }
         this.markerList = [];
+        this.textmarkerList = [];
+      }
+    },
+
+    deleteText() {
+      this.showPoint = false;
+      let { markerList, textmarkerList } = this;
+      if (markerList.length != 0) {
+        for (let i = 0; i < markerList.length; i++) {
+          textmarkerList[i].setMap(null);
+        }
         this.textmarkerList = [];
       }
     },
@@ -906,6 +943,10 @@ export default {
 
     filterTap() {
       let { branchlist, checkList, begin_date, end_date, name } = this;
+      if (name == "不筛选标记名") {
+        this.name = "";
+      }
+      this.is_all = 1;
       let tempList = [];
       branchlist.forEach(o => {
         if (checkList.indexOf(o.USERGROUP_NAME) != -1) {
@@ -917,10 +958,23 @@ export default {
         this.begin_date = this.crtTimeFtt(this.time[0]);
         this.end_date = this.crtTimeFtt(this.time[1]);
       }
-      console.log(this.begin_date);
+      this.deleteOverlays();
       this.getPoint();
       this.filter = false;
-      // this.init()
+    },
+
+    clearFilterTap() {
+      let userInfo = localStorage.getItem("userinfo");
+      userInfo = JSON.parse(userInfo);
+      this.begin_date = "";
+      this.end_date = "";
+      this.ispublic = userInfo.ISPUBLIC;
+      this.bug_id = "";
+      this.name = "";
+      this.is_all = 1;
+      this.ispublic = this.deleteOverlays();
+      this.getPoint();
+      this.filter = false;
     }
   }
 };
