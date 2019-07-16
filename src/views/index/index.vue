@@ -112,6 +112,7 @@
           range-separator="-"
           start-placeholder="开始日期"
           end-placeholder="结束日期"
+          :picker-options="pickerOptions0"
         ></el-date-picker>
       </div>
       <div class="filter-item">
@@ -322,6 +323,11 @@ export default {
   components: {},
   data() {
     return {
+      pickerOptions0: {
+        disabledDate(time) {
+          return time.getTime() > Date.now() - 8.64e6;
+        }
+      },
       addressList: [],
       address: [],
       loading: false,

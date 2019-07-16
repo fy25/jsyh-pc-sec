@@ -75,7 +75,12 @@
           <el-input v-model="Url" placeholder="请输入链接" />
         </div>
         <div class="input-item">
-          <el-date-picker v-model="Begin_Date" type="date" placeholder="选择活动开始时间"></el-date-picker>
+          <el-date-picker
+            v-model="Begin_Date"
+            type="date"
+            placeholder="选择活动开始时间"
+            :picker-options="pickerOptions0"
+          ></el-date-picker>
         </div>
         <div class="input-item">
           <input
@@ -181,6 +186,11 @@ import { Config } from "../../utils/config";
 export default {
   data() {
     return {
+      pickerOptions0: {
+        disabledDate(time) {
+          return time.getTime() > Date.now() - 8.64e6;
+        }
+      },
       Config,
       tableData: [],
       dialogFormVisible: false,
