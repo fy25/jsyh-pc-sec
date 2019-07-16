@@ -419,8 +419,8 @@ export default {
       this.userInfo = userInfo;
       this.USER_NAME = userInfo.USER_NAME;
       this.ispublic = userInfo.ISPUBLIC;
+      this.is_all = userInfo.IS_ALL;
       if (userInfo.ISPUBLIC == "") {
-        this.is_all = "1";
         typeList = [
           {
             label: "公司业务部",
@@ -446,7 +446,6 @@ export default {
           }
         ];
       } else if (userInfo.ISPUBLIC == "0") {
-        this.is_all = "0";
         typeList = [
           {
             label: "公司业务部",
@@ -460,7 +459,6 @@ export default {
           }
         ];
       } else {
-        this.is_all = "0";
         typeList = [
           {
             label: "零售业务部",

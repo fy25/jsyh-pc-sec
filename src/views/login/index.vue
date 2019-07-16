@@ -169,12 +169,26 @@ export default {
                     type: "success"
                   });
                   let ISPUBLIC = null;
-                  let { retailKey, adminKey } = this.Config;
+                  let IS_ALL = null;
+                  let {
+                    retailKey,
+                    adminKey,
+                    retailId,
+                    corporateId
+                  } = this.Config;
                   let userid = res.data.USER_ID;
                   let { USERGROUP_ID } = res.data;
                   if (adminKey.indexOf(userid) != -1) {
                     ISPUBLIC = "";
+                    IS_ALL = "1";
+                  } else if (retailId.indexOf(userid) != -1) {
+                    ISPUBLIC = "1";
+                    IS_ALL = "1";
+                  } else if (corporateId.indexOf(userid) != -1) {
+                    ISPUBLIC = "0";
+                    IS_ALL = "1";
                   } else {
+                    IS_ALL = "0";
                     if (retailKey.indexOf(USERGROUP_ID) != -1) {
                       ISPUBLIC = "1";
                     } else {
@@ -182,6 +196,7 @@ export default {
                     }
                   }
                   res.data.ISPUBLIC = ISPUBLIC;
+                  res.data.IS_ALL = IS_ALL;
                   localStorage.setItem("userinfo", JSON.stringify(res.data));
                   this.$router.replace({ path: "/index" });
                 }
