@@ -174,10 +174,12 @@ export default {
                     retailKey,
                     adminKey,
                     retailId,
-                    corporateId
+                    corporateId,
+                    retailOrganization,
+                    corporationOrganization
                   } = this.Config;
                   let userid = res.data.USER_ID;
-                  let { USERGROUP_ID } = res.data;
+                  let { ORGANIZATION_ID } = res.data;
                   if (adminKey.indexOf(userid) != -1) {
                     ISPUBLIC = "";
                     IS_ALL = "1";
@@ -189,9 +191,11 @@ export default {
                     IS_ALL = "1";
                   } else {
                     IS_ALL = "0";
-                    if (retailKey.indexOf(USERGROUP_ID) != -1) {
+                    if (retailOrganization.indexOf(ORGANIZATION_ID) != -1) {
                       ISPUBLIC = "1";
-                    } else {
+                    } else if (
+                      corporationOrganization.indexOf(ORGANIZATION_ID) != -1
+                    ) {
                       ISPUBLIC = "0";
                     }
                   }

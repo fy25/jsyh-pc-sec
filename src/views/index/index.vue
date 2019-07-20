@@ -47,8 +47,8 @@
             <el-col :span="12">
               <div class="btn-group">
                 <button @click="openDialog">添加标记</button>
-                <button @click="getPoint" v-if="!showPoint">查看历史标记</button>
-                <button @click="deleteText" v-else>关闭历史标记</button>
+                <button @click="getPoint" v-if="!showPoint">查看历史标题</button>
+                <button @click="deleteText" v-else>关闭历史标题</button>
                 <!-- <button>查看活动</button> -->
               </div>
             </el-col>
@@ -897,7 +897,7 @@ export default {
       if (markerList.length != 0) {
         for (let i = 0; i < markerList.length; i++) {
           markerList[i].setMap(null);
-          textmarkerList[i].setMap(null);
+          // textmarkerList[i].setMap(null);
         }
         this.markerList = [];
         this.textmarkerList = [];
