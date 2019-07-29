@@ -40,11 +40,18 @@
         <el-table-column prop="URL" label="URL链接"></el-table-column>
         <el-table-column prop="BEGIN_DATE" label="开始时间"></el-table-column>
         <!-- <el-table-column prop="END_DATE" label="结束时间"></el-table-column> -->
-        <!-- <el-table-column label="图片">
+        <el-table-column label="图片">
           <template slot-scope="scope">
-            <img v-for="(item,inde) in scope.row.imgList" :src="item" alt>
+            <img
+              v-for="(item,inde) in scope.row.imgList"
+              :src="item"
+              alt
+              style="width:60px;height:60px;margin-right:10px"
+              :id="item"
+              @click="imgPreview"
+            />
           </template>
-        </el-table-column>-->
+        </el-table-column>
         <el-table-column label="操作">
           <template slot-scope="scope">
             <el-button size="mini" type="primary" @click="openActicity(scope.row.ACTIVITY_ID)">编辑活动</el-button>
@@ -123,6 +130,10 @@
     <div class="goback">
       <el-button type="info" @click="goBack">返回上一页</el-button>
     </div>
+
+    <div class="img-wrapper" v-if="previewImg" @click="hideImg">
+      <img :src="curImg" />
+    </div>
   </el-container>
 </template>
 
@@ -178,6 +189,20 @@
     }
   }
 }
+
+.img-wrapper {
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  z-index: 10;
+  img {
+    width: auto;
+    height: 100%;
+  }
+}
 </style>
 
 <script>
@@ -186,6 +211,8 @@ import { Config } from "../../utils/config";
 export default {
   data() {
     return {
+      previewImg: false,
+      curImg: null,
       pickerOptions0: {
         disabledDate(time) {
           return time.getTime() > Date.now() - 8.64e6;
@@ -429,6 +456,7 @@ export default {
             res.data.forEach(item => {
               item.REMARK = decodeURI(item.REMARK);
               let imgList = [];
+              // debugger;
               if (item.IMG.indexOf(",") != -1) {
                 imgList = item.IMG.split(",");
                 let temp = [];
@@ -437,7 +465,10 @@ export default {
                 });
                 item.imgList = temp;
               } else {
-                item.imgList = `${this.Config.server}${item.IMG}`;
+                let temp = [];
+                temp.push(`${this.Config.server}${item.IMG}`);
+                // item.imgList = `${this.Config.server}${item.IMG}`;
+                item.imgList = temp;
               }
             });
           }
@@ -656,6 +687,18 @@ export default {
       publicApi.publicApi(`/ajax/Com_PCInfo.ashx`, data).then(res => {
         this.branchlist = res.data;
       });
+    },
+
+    // 查看大图、
+    imgPreview(e) {
+      console.log(e.currentTarget.id);
+      this.curImg = e.currentTarget.id;
+      this.previewImg = true;
+    },
+
+    hideImg() {
+      this.previewImg = false;
+      this.curImg = null;
     }
   }
 };
