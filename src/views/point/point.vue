@@ -68,9 +68,11 @@
     <el-dialog title="添加活动" :visible.sync="dialogFormVisible" center>
       <div class="activity">
         <div class="input-item">
+          <p>标题</p>
           <el-input v-model="Activity_Name" placeholder="请输入标题" />
         </div>
         <div class="input-item">
+          <p>内容</p>
           <el-input
             v-model="Remark"
             type="textarea"
@@ -79,9 +81,11 @@
           />
         </div>
         <div class="input-item">
+          <p>链接</p>
           <el-input v-model="Url" placeholder="请输入链接" />
         </div>
         <div class="input-item">
+          <p>开始时间</p>
           <el-date-picker
             v-model="Begin_Date"
             type="date"
@@ -90,13 +94,19 @@
           ></el-date-picker>
         </div>
         <div class="input-item">
+          <p>图片</p>
           <input
             type="file"
             @change="changeImage($event)"
             accept="image/gif, image/jpeg, image/jpg, image/png"
           />
           <div class="img-list">
-            <img v-for="item in uploadImg" :src="item" alt />
+            <div class="img-item" v-for="(item,index) in uploadImg">
+              <img :src="item" />
+              <div class="icon" :data-index="index" @click="deleteImg">
+                <i class="el-icon-delete"></i>
+              </div>
+            </div>
           </div>
         </div>
         <div class="btn-group">
@@ -110,15 +120,19 @@
     <el-dialog title="修改标记" :visible.sync="pointDialog" center>
       <div class="activity">
         <div class="input-item">
-          <el-input v-model="SIGN_NAME" :value="SIGN_NAME" placeholder="请输入标题" />
+          <p>标记标题</p>
+          <el-input v-model="SIGN_NAME" :value="SIGN_NAME" placeholder="请输入标记标题" />
         </div>
         <div class="input-item">
+          <p>企事业单位名称</p>
           <el-input v-model="CENAME" :value="CENAME" placeholder="请输入企事业单位名称" />
         </div>
-        <div class="input-item" v-if="IsPublic!=0">
+        <div class="input-item" v-if="IsPublic!='0'">
+          <p>拓展人数</p>
           <el-input v-model="EXPAND" :value="EXPAND" placeholder="请输入拓展人数" />
         </div>
-        <div class="input-item" v-if="IsPublic!=0">
+        <div class="input-item" v-if="IsPublic!='0'">
+          <p>已拓展人数</p>
           <el-input v-model="ENDEXPAND" :value="ENDEXPAND" placeholder="请输入已拓展人数" />
         </div>
         <div class="btn-group">
@@ -158,6 +172,21 @@
     margin: 30px 0;
     .img-list {
       margin: 10px;
+      .img-item {
+        display: inline-block;
+        position: relative;
+        .icon {
+          position: absolute;
+          right: 0;
+          top: 0;
+          background-color: rgba(0, 0, 0, 0.5);
+          padding: 3px;
+          i {
+            font-size: 24px;
+            color: #fff;
+          }
+        }
+      }
       img {
         width: 80px;
         height: 80px;
@@ -300,13 +329,31 @@ export default {
 
     // 获取单条活动
     getActivityOne(id) {
+      let imgList = [];
       let data = {
         action: "get_activity_object",
         _key: id,
         user_id: this.userInfo.USER_ID
       };
       publicApi.publicApi("/ajax/Com_PCInfo.ashx", data).then(res => {
-        console.log(res, "yuyuyuyuy");
+        console.log(res);
+        if (res.data.IMG == "&nbsp;") {
+          this.uploadImg = [];
+        } else {
+          if (res.data.IMG.indexOf(",") != -1) {
+            imgList = res.data.IMG.split(",");
+            let temp = [];
+            imgList.forEach(sub => {
+              temp.push(`${this.Config.server}${sub}`);
+            });
+            this.uploadImg = temp;
+            console.log(temp);
+          } else {
+            let temp = [];
+            temp.push(`${this.Config.server}${res.data.IMG}`);
+            this.uploadImg = temp;
+          }
+        }
         this.Activity_Name = res.data.ACTIVITY_NAME;
         this.Remark = decodeURI(res.data.REMARK);
         this.Url = res.data.URL;
@@ -323,7 +370,6 @@ export default {
 
     // 提交活动
     submitTap(id) {
-      // console.log(this.crtTimeFtt(this.Begin_Date));
       let img = null;
       if (this.uploadImg.length > 0) {
         img = this.uploadImg.join("|");
@@ -455,8 +501,10 @@ export default {
           if (res.data.length != 0) {
             res.data.forEach(item => {
               item.REMARK = decodeURI(item.REMARK);
+              if (item.URL == "&nbsp;") {
+                item.URL = "无";
+              }
               let imgList = [];
-              // debugger;
               if (item.IMG.indexOf(",") != -1) {
                 imgList = item.IMG.split(",");
                 let temp = [];
@@ -467,14 +515,12 @@ export default {
               } else {
                 let temp = [];
                 temp.push(`${this.Config.server}${item.IMG}`);
-                // item.imgList = `${this.Config.server}${item.IMG}`;
                 item.imgList = temp;
               }
             });
           }
         }
         this.activityList = res.data;
-        console.log(this.activityList, "pppp");
       });
     },
     // 选择图片
@@ -496,6 +542,14 @@ export default {
           that.Img = this.result;
         };
       }
+    },
+
+    // 删除图片
+    deleteImg(e) {
+      let { uploadImg } = this;
+      let { index } = e.currentTarget.dataset;
+      uploadImg.splice(index, 1);
+      this.uploadImg = uploadImg;
     },
     // 删除标记
     deletePoint() {
@@ -544,9 +598,7 @@ export default {
             pkVal: id,
             user_id: this.userInfo.USER_ID
           };
-          console.log(data);
           publicApi.publicApi("/ajax/Com_PCInfo.ashx", data).then(res => {
-            console.log(res);
             if (res.code == "success") {
               this.$message({
                 type: "success",
@@ -570,7 +622,6 @@ export default {
     },
 
     navigateTo(path) {
-      // console.log(path)
       this.$router.push({ path: path });
     },
 
@@ -620,6 +671,11 @@ export default {
         } else if (this.ENDEXPAND == "") {
           this.$message({
             message: "请输入已拓展人数",
+            type: "warning"
+          });
+        } else if (Number(this.EXPAND) < Number(this.ENDEXPAND)) {
+          this.$message({
+            message: "已拓展人数需小于等于拓展人数",
             type: "warning"
           });
         } else {
@@ -689,9 +745,8 @@ export default {
       });
     },
 
-    // 查看大图、
+    // 查看大图
     imgPreview(e) {
-      console.log(e.currentTarget.id);
       this.curImg = e.currentTarget.id;
       this.previewImg = true;
     },
