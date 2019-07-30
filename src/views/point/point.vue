@@ -344,19 +344,27 @@ export default {
             imgList = res.data.IMG.split(",");
             let temp = [];
             imgList.forEach(sub => {
-              temp.push(`${this.Config.server}${sub}`);
+              if (sub.indexOf("http") != -1) {
+                temp.push(`${sub}`);
+              } else {
+                temp.push(`${this.Config.server}${sub}`);
+              }
             });
             this.uploadImg = temp;
             console.log(temp);
           } else {
             let temp = [];
-            temp.push(`${this.Config.server}${res.data.IMG}`);
+            if (res.data.IMG.indexOf("http") != -1) {
+              temp.push(`${res.data.IMG}`);
+            } else {
+              temp.push(`${this.Config.server}${res.data.IMG}`);
+            }
             this.uploadImg = temp;
           }
         }
         this.Activity_Name = res.data.ACTIVITY_NAME;
         this.Remark = decodeURI(res.data.REMARK);
-        this.Url = res.data.URL;
+        this.Url = res.data.URL == "&nbsp;" ? "无" : res.data.URL;
       });
     },
 
@@ -509,12 +517,20 @@ export default {
                 imgList = item.IMG.split(",");
                 let temp = [];
                 imgList.forEach(sub => {
-                  temp.push(`${this.Config.server}${sub}`);
+                  if (sub.indexOf("http") != -1) {
+                    temp.push(`${sub}`);
+                  } else {
+                    temp.push(`${this.Config.server}${sub}`);
+                  }
                 });
                 item.imgList = temp;
               } else {
                 let temp = [];
-                temp.push(`${this.Config.server}${item.IMG}`);
+                if (item.IMG.indexOf("http") != -1) {
+                  temp.push(`${item.IMG}`);
+                } else {
+                  temp.push(`${this.Config.server}${item.IMG}`);
+                }
                 item.imgList = temp;
               }
             });
