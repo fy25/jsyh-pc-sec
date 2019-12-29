@@ -3,10 +3,10 @@
     <div class="index-container clearfloat">
       <div class="index-header">
         <div class="index-header-logo">
-          <img
+          <!-- <img
             src="http://www.jsbchina.cn/data/tosend/resource/upload/20170113/f89b6579-9a50-4281-9a08-93d867dc452a.png"
             alt
-          />
+          /> -->
         </div>
         <div class="index-header-menu">
           <div class="search-input" @click="goWhere('/search')">{{poiname}}</div>
